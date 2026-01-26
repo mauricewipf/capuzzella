@@ -1,0 +1,30 @@
+{
+  "name": "capuzzella",
+  "version": "1.0.0",
+  "description": "AI-Powered Website Builder - Edit websites using natural language",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "keywords": [
+    "website-builder",
+    "ai",
+    "express",
+    "tailwind"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "bcrypt": "^5.1.1",
+    "better-sqlite3": "^11.7.0",
+    "dotenv": "^16.4.7",
+    "openai": "^4.77.0",
+    "@anthropic-ai/sdk": "^0.33.1",
+    "cheerio": "^1.0.0"
+  },
+  "devDependencies": {}
+}
