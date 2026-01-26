@@ -7,6 +7,7 @@
 
   const PAGE_PATH = window.CAPUZZELLA_PAGE_PATH || 'index.html';
   const API_BASE = '/api';
+  const STORAGE_KEY = `capuzzella_chat_${PAGE_PATH}`;
 
   let messages = [];
   let isLoading = false;
@@ -14,6 +15,47 @@
     isPublished: false,
     hasUnpublishedChanges: false
   };
+
+  /**
+   * Save chat messages to sessionStorage
+   */
+  function saveMessages() {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    } catch (e) {
+      console.warn('Failed to save chat messages:', e);
+    }
+  }
+
+  /**
+   * Restore chat messages from sessionStorage
+   */
+  function restoreMessages() {
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const savedMessages = JSON.parse(saved);
+        const messagesContainer = document.getElementById('capuzzella-messages');
+        
+        // Restore each message to the UI
+        savedMessages.forEach(msg => {
+          const messageEl = document.createElement('div');
+          messageEl.className = `capuzzella-message capuzzella-message-${msg.type}`;
+          messageEl.textContent = msg.content;
+          messagesContainer.appendChild(messageEl);
+          messages.push(msg);
+        });
+        
+        // Scroll to bottom
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        
+        // Clear storage after restore
+        sessionStorage.removeItem(STORAGE_KEY);
+      }
+    } catch (e) {
+      console.warn('Failed to restore chat messages:', e);
+    }
+  }
 
   /**
    * Initialize the editor UI
@@ -80,6 +122,9 @@
     sendBtn.addEventListener('click', sendMessage);
     publishBtn.addEventListener('click', publishPage);
     unpublishBtn.addEventListener('click', unpublishPage);
+
+    // Restore any saved chat messages from previous session
+    restoreMessages();
 
     // Fetch initial publish status
     fetchPublishStatus();
@@ -217,11 +262,18 @@
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to process message');
-      }
-
       const data = await response.json();
+
+      if (!response.ok) {
+        const errorMessage = data.error || 'Unknown server error';
+        console.error('Chat API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorMessage,
+          response: data
+        });
+        throw new Error(errorMessage);
+      }
 
       // Add assistant message
       addMessage('assistant', data.message);
@@ -229,14 +281,16 @@
       // Reload the page if HTML was updated
       if (data.updatedHtml) {
         addMessage('system', 'Page updated. Reloading...');
+        // Save messages before reload so they persist
+        saveMessages();
         setTimeout(() => {
           window.location.reload();
         }, 1000);
       }
 
     } catch (error) {
-      console.error('Chat error:', error);
-      addMessage('system', 'Error: Failed to process your request. Please try again.');
+      console.error('Chat error:', error.message, error);
+      addMessage('system', `Error: ${error.message || 'Failed to process your request. Please try again.'}`);
     } finally {
       setLoading(false);
     }

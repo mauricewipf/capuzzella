@@ -1,7 +1,7 @@
 import express from 'express';
 import { requireAuth, requirePasswordChanged } from '../middleware/auth.js';
-import { getPage, savePage, listPages, deletePage } from '../services/pages.js';
 import { processChat } from '../services/ai/index.js';
+import { deletePage, getPage, listPages, savePage } from '../services/pages.js';
 
 const router = express.Router();
 
@@ -14,24 +14,24 @@ router.use(requirePasswordChanged);
  */
 router.post('/chat', async (req, res) => {
   const { message, pagePath } = req.body;
-  
+
   if (!message || !pagePath) {
     return res.status(400).json({ error: 'Message and pagePath are required' });
   }
-  
+
   try {
     const currentHtml = await getPage(pagePath);
-    
+
     if (!currentHtml) {
       return res.status(404).json({ error: 'Page not found' });
     }
-    
+
     const result = await processChat(message, currentHtml, pagePath);
-    
+
     if (result.updatedHtml) {
       await savePage(pagePath, result.updatedHtml);
     }
-    
+
     res.json({
       success: true,
       message: result.assistantMessage,
@@ -39,7 +39,18 @@ router.post('/chat', async (req, res) => {
     });
   } catch (error) {
     console.error('Chat error:', error);
-    res.status(500).json({ error: 'Failed to process chat message' });
+
+    // Include more details in the error response for debugging
+    const errorDetails = {
+      error: 'Failed to process chat message',
+      message: error.message,
+      ...(process.env.NODE_ENV !== 'production' && {
+        stack: error.stack,
+        name: error.name
+      })
+    };
+
+    res.status(500).json(errorDetails);
   }
 });
 
@@ -61,14 +72,14 @@ router.get('/pages', async (req, res) => {
  */
 router.get('/pages/*', async (req, res) => {
   const pagePath = req.params[0];
-  
+
   try {
     const html = await getPage(pagePath);
-    
+
     if (!html) {
       return res.status(404).json({ error: 'Page not found' });
     }
-    
+
     res.json({ html });
   } catch (error) {
     console.error('Get page error:', error);
@@ -82,11 +93,11 @@ router.get('/pages/*', async (req, res) => {
 router.put('/pages/*', async (req, res) => {
   const pagePath = req.params[0];
   const { html } = req.body;
-  
+
   if (!html) {
     return res.status(400).json({ error: 'HTML content is required' });
   }
-  
+
   try {
     await savePage(pagePath, html);
     res.json({ success: true });
@@ -101,7 +112,7 @@ router.put('/pages/*', async (req, res) => {
  */
 router.delete('/pages/*', async (req, res) => {
   const pagePath = req.params[0];
-  
+
   try {
     await deletePage(pagePath);
     res.json({ success: true });

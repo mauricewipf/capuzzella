@@ -27,7 +27,6 @@ router.get('/', (req, res) => {
       <div class="max-w-2xl mx-auto py-12 px-4">
         <div class="flex justify-between items-center mb-8">
           <h1 class="text-3xl font-bold text-gray-900">Settings</h1>
-          <a href="/" class="text-indigo-600 hover:text-indigo-800">← Back to site</a>
         </div>
 
         ${message ? `
