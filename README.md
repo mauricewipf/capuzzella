@@ -42,13 +42,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 Copy the output and paste it as the `SESSION_SECRET` value in your `.env` file.
 
-### 3. Create Admin User
-
-```bash
-node scripts/create-user.js admin your-password
-```
-
-### 4. Start the Server
+### 3. Start the Server
 
 ```bash
 # Development mode (with auto-reload)
@@ -59,6 +53,18 @@ npm start
 ```
 
 The server will start at http://localhost:3000
+
+On first run, a default admin user is created automatically:
+- **Username**: `admin`
+- **Password**: Randomly generated and shown in the server logs
+
+**Important**: Save the password from the logs on first run. It will only be displayed once.
+
+To create additional users, use the create-user script:
+
+```bash
+node scripts/create-user.js username password
+```
 
 ## Usage
 
@@ -147,15 +153,15 @@ capuzzella/
 | Styling | Tailwind CSS |
 | Editor UI | Vanilla JS |
 
-## Deploy on Vercel
+## Deploy on Railway
 
 Deploy your own Capuzzella instance with one click:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FYOUR_USERNAME%2Fcapuzzella&env=SESSION_SECRET,AI_PROVIDER,OPENAI_API_KEY,ANTHROPIC_API_KEY&envDescription=API%20keys%20and%20configuration%20for%20Capuzzella&envLink=https%3A%2F%2Fgithub.com%2FYOUR_USERNAME%2Fcapuzzella%23configure-environment)
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template?template=https://github.com/mauricewipf/capuzzella)
 
 ### Environment Variables
 
-Configure these in your Vercel project settings:
+Configure these in your Railway project settings:
 
 | Variable | Description |
 |----------|-------------|
@@ -166,14 +172,17 @@ Configure these in your Vercel project settings:
 
 ### Post-Deployment Setup
 
-After deploying, create an admin user by running:
+On first run, a default admin user is created automatically. Check the deployment logs for the credentials:
+- **Username**: `admin`
+- **Password**: Shown in the logs (save it immediately)
 
-```bash
-vercel env pull .env.local
-node scripts/create-user.js admin your-password
-```
+### Persistent Storage
 
-Or use Vercel's serverless function to initialize the database and create users programmatically.
+Railway supports persistent volumes. To ensure your database and draft files persist across deployments, attach a volume to your service:
+
+1. Go to your service in Railway
+2. Click "Add Volume"
+3. Mount it at `/app/data` for the SQLite database
 
 ## License
 
