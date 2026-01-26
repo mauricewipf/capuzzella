@@ -8,26 +8,27 @@ const SALT_ROUNDS = 10;
  * 
  * @param {string} username
  * @param {string} password
- * @returns {Promise<{id: number, username: string} | null>}
+ * @returns {Promise<{id: number, username: string, mustChangePassword: boolean} | null>}
  */
 export async function authenticateUser(username, password) {
   const db = getDb();
-  
-  const user = db.prepare('SELECT id, username, password_hash FROM users WHERE username = ?').get(username);
-  
+
+  const user = db.prepare('SELECT id, username, password_hash, must_change_password FROM users WHERE username = ?').get(username);
+
   if (!user) {
     return null;
   }
-  
+
   const isValid = await bcrypt.compare(password, user.password_hash);
-  
+
   if (!isValid) {
     return null;
   }
-  
+
   return {
     id: user.id,
-    username: user.username
+    username: user.username,
+    mustChangePassword: !!user.must_change_password
   };
 }
 
@@ -36,18 +37,20 @@ export async function authenticateUser(username, password) {
  * 
  * @param {string} username
  * @param {string} password
- * @returns {Promise<{id: number, username: string}>}
+ * @param {boolean} mustChangePassword - Set to true if password is generated
+ * @returns {Promise<{id: number, username: string, mustChangePassword: boolean}>}
  */
-export async function createUser(username, password) {
+export async function createUser(username, password, mustChangePassword = false) {
   const db = getDb();
-  
+
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-  
-  const result = db.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)').run(username, passwordHash);
-  
+
+  const result = db.prepare('INSERT INTO users (username, password_hash, must_change_password) VALUES (?, ?, ?)').run(username, passwordHash, mustChangePassword ? 1 : 0);
+
   return {
     id: result.lastInsertRowid,
-    username
+    username,
+    mustChangePassword
   };
 }
 
@@ -59,9 +62,9 @@ export async function createUser(username, password) {
  */
 export function getUserById(id) {
   const db = getDb();
-  
+
   const user = db.prepare('SELECT id, username FROM users WHERE id = ?').get(id);
-  
+
   return user || null;
 }
 
@@ -73,8 +76,43 @@ export function getUserById(id) {
  */
 export function usernameExists(username) {
   const db = getDb();
-  
+
   const user = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
-  
+
   return !!user;
+}
+
+/**
+ * Update a user's password
+ * 
+ * @param {number} userId
+ * @param {string} currentPassword
+ * @param {string} newPassword
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export async function updatePassword(userId, currentPassword, newPassword) {
+  const db = getDb();
+
+  const user = db.prepare('SELECT id, password_hash FROM users WHERE id = ?').get(userId);
+
+  if (!user) {
+    return { success: false, error: 'User not found' };
+  }
+
+  const isValid = await bcrypt.compare(currentPassword, user.password_hash);
+
+  if (!isValid) {
+    return { success: false, error: 'Current password is incorrect' };
+  }
+
+  if (newPassword.length < 6) {
+    return { success: false, error: 'New password must be at least 6 characters' };
+  }
+
+  const newPasswordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+  // Clear must_change_password flag when user updates their password
+  db.prepare('UPDATE users SET password_hash = ?, must_change_password = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(newPasswordHash, userId);
+
+  return { success: true };
 }

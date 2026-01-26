@@ -1,12 +1,13 @@
 import express from 'express';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requirePasswordChanged } from '../middleware/auth.js';
 import { getPage, savePage, listPages, deletePage } from '../services/pages.js';
 import { processChat } from '../services/ai/index.js';
 
 const router = express.Router();
 
-// All API routes require authentication
+// All API routes require authentication and password to be changed
 router.use(requireAuth);
+router.use(requirePasswordChanged);
 
 /**
  * POST /api/chat - Process AI chat message for page editing

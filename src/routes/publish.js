@@ -2,7 +2,7 @@ import express from 'express';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requirePasswordChanged } from '../middleware/auth.js';
 import { listPages } from '../services/pages.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -13,8 +13,9 @@ const router = express.Router();
 const DRAFTS_DIR = path.join(__dirname, '../../drafts');
 const PUBLIC_DIR = path.join(__dirname, '../../public');
 
-// All publish routes require authentication
+// All publish routes require authentication and password to be changed
 router.use(requireAuth);
+router.use(requirePasswordChanged);
 
 /**
  * POST /publish - Publish all drafts to public directory

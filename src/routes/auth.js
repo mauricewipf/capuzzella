@@ -57,6 +57,12 @@ router.post('/login', async (req, res) => {
     if (user) {
       req.session.userId = user.id;
       req.session.username = user.username;
+      req.session.mustChangePassword = user.mustChangePassword;
+      
+      // Force redirect to settings if user must change their password
+      if (user.mustChangePassword) {
+        return res.redirect('/settings?message=' + encodeURIComponent('Please change your generated password before continuing'));
+      }
       
       // Redirect to the page they were trying to access, or home
       const returnTo = req.session.returnTo || '/';

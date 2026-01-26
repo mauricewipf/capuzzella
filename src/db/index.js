@@ -62,13 +62,15 @@ function seedDefaultUser() {
     const password = crypto.randomBytes(12).toString('base64').slice(0, 16);
     const passwordHash = bcrypt.hashSync(password, SALT_ROUNDS);
 
-    db.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)').run(username, passwordHash);
+    // Set must_change_password = 1 for generated passwords
+    db.prepare('INSERT INTO users (username, password_hash, must_change_password) VALUES (?, ?, 1)').run(username, passwordHash);
 
     console.log('');
     console.log('='.repeat(50));
     console.log('Default admin user created!');
     console.log(`  Username: ${username}`);
     console.log(`  Password: ${password}`);
+    console.log('  (You will be prompted to change this password on first login)');
     console.log('='.repeat(50));
     console.log('');
   }
