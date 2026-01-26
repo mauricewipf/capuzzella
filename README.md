@@ -27,10 +27,20 @@ cp .env.example .env
 ```
 
 Edit `.env` and set:
-- `SESSION_SECRET` - A secure random string for session encryption
+- `SESSION_SECRET` - A secure random string for session encryption (see below)
 - `AI_PROVIDER` - Either `openai` or `anthropic`
 - `OPENAI_API_KEY` - Your OpenAI API key (if using OpenAI)
 - `ANTHROPIC_API_KEY` - Your Anthropic API key (if using Anthropic)
+
+Generate a secure SESSION_SECRET:
+
+```bash
+npm run generate:secret
+# or
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Copy the output and paste it as the `SESSION_SECRET` value in your `.env` file.
 
 ### 3. Create Admin User
 
