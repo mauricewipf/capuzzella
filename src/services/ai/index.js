@@ -3,12 +3,20 @@ import { processWithAnthropic } from './anthropic.js';
 import { loadComponents, buildSystemPrompt } from './prompts.js';
 
 /**
- * Process a chat message and return AI response with updated HTML
+ * @typedef {Object} ChatResult
+ * @property {string} action - The action type: 'edit', 'create', or 'respond'
+ * @property {string} assistantMessage - Message from the AI
+ * @property {string|null} updatedHtml - Updated or new HTML content
+ * @property {string|null} newPagePath - Path for new page (only for 'create' action)
+ */
+
+/**
+ * Process a chat message and return AI response with potential page changes
  * 
  * @param {string} message - User's chat message
- * @param {string} currentHtml - Current HTML of the page
+ * @param {string|null} currentHtml - Current HTML of the page (null if creating new page without context)
  * @param {string} pagePath - Path to the current page
- * @returns {Promise<{assistantMessage: string, updatedHtml: string | null}>}
+ * @returns {Promise<ChatResult>}
  */
 export async function processChat(message, currentHtml, pagePath) {
   const provider = process.env.AI_PROVIDER || 'openai';
@@ -37,34 +45,28 @@ export async function processChat(message, currentHtml, pagePath) {
  * Build the user message with context
  * 
  * @param {string} message - User's message
- * @param {string} currentHtml - Current HTML content
+ * @param {string|null} currentHtml - Current HTML content (can be null)
  * @param {string} pagePath - Path to the page
  * @returns {string}
  */
 function buildUserMessage(message, currentHtml, pagePath) {
+  const htmlContext = currentHtml 
+    ? `Current HTML:
+\`\`\`html
+${currentHtml}
+\`\`\``
+    : 'No current page content (this may be a request to create a new page).';
+
   return `
 Current page: ${pagePath}
 
-Current HTML:
-\`\`\`html
-${currentHtml}
-\`\`\`
+${htmlContext}
 
 User request: ${message}
 
-Please respond with:
-1. A brief explanation of what changes you'll make
-2. The complete updated HTML (if changes are needed)
-
-Format your response as:
-EXPLANATION:
-[Your explanation here]
-
-HTML:
-\`\`\`html
-[Complete updated HTML here]
-\`\`\`
-
-If no changes are needed, omit the HTML section.
+Use the appropriate tool to respond:
+- Use edit_page if modifying the current page
+- Use create_page if creating a new page (provide a path)
+- Use respond if no page changes are needed
 `.trim();
 }

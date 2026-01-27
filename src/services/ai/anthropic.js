@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { AI_TOOLS } from './prompts.js';
 
 let anthropicClient = null;
 
@@ -16,11 +17,11 @@ function getClient() {
 }
 
 /**
- * Process a message using Anthropic
+ * Process a message using Anthropic with tool use
  * 
  * @param {string} systemPrompt - System prompt with context
  * @param {string} userMessage - User's message
- * @returns {Promise<{assistantMessage: string, updatedHtml: string | null}>}
+ * @returns {Promise<{action: string, assistantMessage: string, updatedHtml: string | null, newPagePath: string | null}>}
  */
 export async function processWithAnthropic(systemPrompt, userMessage) {
   const client = getClient();
@@ -30,35 +31,62 @@ export async function processWithAnthropic(systemPrompt, userMessage) {
     model,
     max_tokens: 16000,
     system: systemPrompt,
+    tools: AI_TOOLS.anthropic,
+    tool_choice: { type: 'any' },
     messages: [
       { role: 'user', content: userMessage }
     ]
   });
   
-  const content = response.content[0]?.type === 'text' 
-    ? response.content[0].text 
-    : '';
+  // Find tool use in response
+  const toolUse = response.content.find(block => block.type === 'tool_use');
   
-  return parseAIResponse(content);
+  if (toolUse) {
+    return parseToolCall(toolUse.name, toolUse.input);
+  }
+  
+  // Fallback to text response (shouldn't happen with tool_choice: any)
+  const textBlock = response.content.find(block => block.type === 'text');
+  return {
+    action: 'respond',
+    assistantMessage: textBlock?.text || 'I could not process your request.',
+    updatedHtml: null,
+    newPagePath: null
+  };
 }
 
 /**
- * Parse the AI response to extract explanation and HTML
+ * Parse a tool call into a standardized response format
  * 
- * @param {string} content - Raw AI response
- * @returns {{assistantMessage: string, updatedHtml: string | null}}
+ * @param {string} toolName - Name of the called tool
+ * @param {object} input - Tool input
+ * @returns {{action: string, assistantMessage: string, updatedHtml: string | null, newPagePath: string | null}}
  */
-function parseAIResponse(content) {
-  // Extract explanation
-  const explanationMatch = content.match(/EXPLANATION:\s*([\s\S]*?)(?=HTML:|$)/i);
-  const explanation = explanationMatch?.[1]?.trim() || content;
-  
-  // Extract HTML
-  const htmlMatch = content.match(/```html\s*([\s\S]*?)```/);
-  const updatedHtml = htmlMatch?.[1]?.trim() || null;
-  
-  return {
-    assistantMessage: explanation,
-    updatedHtml
-  };
+function parseToolCall(toolName, input) {
+  switch (toolName) {
+    case 'edit_page':
+      return {
+        action: 'edit',
+        assistantMessage: input.explanation,
+        updatedHtml: input.html,
+        newPagePath: null
+      };
+    
+    case 'create_page':
+      return {
+        action: 'create',
+        assistantMessage: input.explanation,
+        updatedHtml: input.html,
+        newPagePath: input.path
+      };
+    
+    case 'respond':
+    default:
+      return {
+        action: 'respond',
+        assistantMessage: input.message || input.explanation || '',
+        updatedHtml: null,
+        newPagePath: null
+      };
+  }
 }

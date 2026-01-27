@@ -326,8 +326,24 @@
       // Add assistant message
       addMessage('assistant', data.message);
 
-      // Update the page content dynamically if HTML was updated
-      if (data.updatedHtml) {
+      // Handle different actions
+      if (data.action === 'create' && data.newPagePath) {
+        // New page was created - offer to navigate
+        addMessage('system', `New page created: ${data.newPagePath}`);
+        
+        // Save current chat messages before navigation
+        saveMessages();
+        
+        // Create a clickable link to navigate to the new page
+        const messagesContainer = document.getElementById('capuzzella-messages');
+        const linkEl = document.createElement('div');
+        linkEl.className = 'capuzzella-message capuzzella-message-system';
+        linkEl.innerHTML = `<a href="/${data.newPagePath}?edit=true" class="capuzzella-new-page-link">Open new page →</a>`;
+        messagesContainer.appendChild(linkEl);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        
+      } else if (data.updatedHtml) {
+        // Current page was updated
         updatePageContent(data.updatedHtml);
         addMessage('system', 'Page updated!');
         // Refresh publish status since content changed

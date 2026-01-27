@@ -10,7 +10,7 @@ router.use(requireAuth);
 router.use(requirePasswordChanged);
 
 /**
- * POST /api/chat - Process AI chat message for page editing
+ * POST /api/chat - Process AI chat message for page editing or creation
  */
 router.post('/chat', async (req, res) => {
   const { message, pagePath } = req.body;
@@ -20,23 +20,42 @@ router.post('/chat', async (req, res) => {
   }
 
   try {
+    // Get current page content (may be null if page doesn't exist)
     const currentHtml = await getPage(pagePath);
-
-    if (!currentHtml) {
-      return res.status(404).json({ error: 'Page not found' });
-    }
 
     const result = await processChat(message, currentHtml, pagePath);
 
-    if (result.updatedHtml) {
+    // Handle different actions
+    if (result.action === 'create' && result.newPagePath && result.updatedHtml) {
+      // Create a new page
+      await savePage(result.newPagePath, result.updatedHtml);
+      
+      res.json({
+        success: true,
+        action: 'create',
+        message: result.assistantMessage,
+        updatedHtml: result.updatedHtml,
+        newPagePath: result.newPagePath
+      });
+    } else if (result.action === 'edit' && result.updatedHtml) {
+      // Edit the current page
       await savePage(pagePath, result.updatedHtml);
+      
+      res.json({
+        success: true,
+        action: 'edit',
+        message: result.assistantMessage,
+        updatedHtml: result.updatedHtml
+      });
+    } else {
+      // Just a response, no page changes
+      res.json({
+        success: true,
+        action: 'respond',
+        message: result.assistantMessage,
+        updatedHtml: null
+      });
     }
-
-    res.json({
-      success: true,
-      message: result.assistantMessage,
-      updatedHtml: result.updatedHtml
-    });
   } catch (error) {
     console.error('Chat error:', error);
 

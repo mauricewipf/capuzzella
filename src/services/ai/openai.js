@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { AI_TOOLS } from './prompts.js';
 
 let openaiClient = null;
 
@@ -16,11 +17,11 @@ function getClient() {
 }
 
 /**
- * Process a message using OpenAI
+ * Process a message using OpenAI with function calling
  * 
  * @param {string} systemPrompt - System prompt with context
  * @param {string} userMessage - User's message
- * @returns {Promise<{assistantMessage: string, updatedHtml: string | null}>}
+ * @returns {Promise<{action: string, assistantMessage: string, updatedHtml: string | null, newPagePath: string | null}>}
  */
 export async function processWithOpenAI(systemPrompt, userMessage) {
   const client = getClient();
@@ -32,32 +33,64 @@ export async function processWithOpenAI(systemPrompt, userMessage) {
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userMessage }
     ],
+    tools: AI_TOOLS.openai,
+    tool_choice: 'required',
     temperature: 0.7,
     max_tokens: 16000
   });
   
-  const content = response.choices[0]?.message?.content || '';
+  const message = response.choices[0]?.message;
   
-  return parseAIResponse(content);
+  // Handle tool calls
+  if (message?.tool_calls && message.tool_calls.length > 0) {
+    const toolCall = message.tool_calls[0];
+    const functionName = toolCall.function.name;
+    const args = JSON.parse(toolCall.function.arguments);
+    
+    return parseToolCall(functionName, args);
+  }
+  
+  // Fallback if no tool call (shouldn't happen with tool_choice: 'required')
+  return {
+    action: 'respond',
+    assistantMessage: message?.content || 'I could not process your request.',
+    updatedHtml: null,
+    newPagePath: null
+  };
 }
 
 /**
- * Parse the AI response to extract explanation and HTML
+ * Parse a tool call into a standardized response format
  * 
- * @param {string} content - Raw AI response
- * @returns {{assistantMessage: string, updatedHtml: string | null}}
+ * @param {string} functionName - Name of the called function
+ * @param {object} args - Function arguments
+ * @returns {{action: string, assistantMessage: string, updatedHtml: string | null, newPagePath: string | null}}
  */
-function parseAIResponse(content) {
-  // Extract explanation
-  const explanationMatch = content.match(/EXPLANATION:\s*([\s\S]*?)(?=HTML:|$)/i);
-  const explanation = explanationMatch?.[1]?.trim() || content;
-  
-  // Extract HTML
-  const htmlMatch = content.match(/```html\s*([\s\S]*?)```/);
-  const updatedHtml = htmlMatch?.[1]?.trim() || null;
-  
-  return {
-    assistantMessage: explanation,
-    updatedHtml
-  };
+function parseToolCall(functionName, args) {
+  switch (functionName) {
+    case 'edit_page':
+      return {
+        action: 'edit',
+        assistantMessage: args.explanation,
+        updatedHtml: args.html,
+        newPagePath: null
+      };
+    
+    case 'create_page':
+      return {
+        action: 'create',
+        assistantMessage: args.explanation,
+        updatedHtml: args.html,
+        newPagePath: args.path
+      };
+    
+    case 'respond':
+    default:
+      return {
+        action: 'respond',
+        assistantMessage: args.message || args.explanation || '',
+        updatedHtml: null,
+        newPagePath: null
+      };
+  }
 }
