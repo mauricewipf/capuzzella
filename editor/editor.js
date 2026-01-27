@@ -36,7 +36,7 @@
       if (saved) {
         const savedMessages = JSON.parse(saved);
         const messagesContainer = document.getElementById('capuzzella-messages');
-        
+
         // Restore each message to the UI
         savedMessages.forEach(msg => {
           const messageEl = document.createElement('div');
@@ -45,15 +45,69 @@
           messagesContainer.appendChild(messageEl);
           messages.push(msg);
         });
-        
+
         // Scroll to bottom
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        
+
         // Clear storage after restore
         sessionStorage.removeItem(STORAGE_KEY);
       }
     } catch (e) {
       console.warn('Failed to restore chat messages:', e);
+    }
+  }
+
+  /**
+   * Update page content by updating the iframe's srcdoc
+   * This provides complete isolation and handles scripts/styles automatically
+   * 
+   * @param {string} newHtml - The complete new HTML document
+   */
+  function updatePageContent(newHtml) {
+    const iframe = document.getElementById('capuzzella-iframe');
+    if (!iframe) {
+      console.error('Content iframe not found');
+      return;
+    }
+
+    // Update iframe content - scripts and styles are handled automatically
+    iframe.srcdoc = newHtml;
+
+    // Update the page title in the editor window
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(newHtml, 'text/html');
+    const newTitle = doc.querySelector('title');
+    if (newTitle) {
+      document.title = `Edit: ${newTitle.textContent}`;
+    }
+
+    console.log('Page content updated in iframe');
+  }
+
+  /**
+   * Refresh page content from the server without browser reload
+   * Fetches the latest content and updates dynamically
+   */
+  async function refreshPageContent() {
+    try {
+      addMessage('system', 'Refreshing content...');
+
+      const response = await fetch(`${API_BASE}/pages/${PAGE_PATH}`, {
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch page');
+      }
+
+      const data = await response.json();
+      updatePageContent(data.html);
+
+      // Also refresh publish status
+      fetchPublishStatus();
+    } catch (error) {
+      console.error('Refresh error:', error);
+      addMessage('system', 'Error: Failed to refresh content.');
     }
   }
 
@@ -64,64 +118,47 @@
     const container = document.getElementById('capuzzella-editor');
     if (!container) return;
 
-    container.innerHTML = `
-      <div class="capuzzella-header">
-        <div class="capuzzella-header-actions">
-          <a href="/settings" class="capuzzella-btn capuzzella-btn-secondary">Settings</a>
-          <button class="capuzzella-btn capuzzella-btn-secondary" onclick="window.location.href='/${PAGE_PATH}'">
-            Exit Edit
-          </button>
-          <button class="capuzzella-btn capuzzella-btn-danger" id="capuzzella-unpublish-btn" style="display: none;">
-            Unpublish
-          </button>
-          <button class="capuzzella-btn capuzzella-btn-primary" id="capuzzella-publish-btn">
-            Publish
-          </button>
-        </div>
-      </div>
-      
-      <div class="capuzzella-page-info">
-        <div class="capuzzella-page-details">
-          <span>Editing:</span>
-          <span class="capuzzella-page-path">${PAGE_PATH}</span>
-        </div>
-        <div class="capuzzella-publish-status" id="capuzzella-publish-status">
-          <span class="capuzzella-status-badge capuzzella-status-loading">Loading...</span>
-        </div>
-      </div>
-      
-      <div class="capuzzella-messages" id="capuzzella-messages">
-        <div class="capuzzella-message capuzzella-message-system">
-          Describe what changes you'd like to make to this page.
-        </div>
-      </div>
-      
-      <div class="capuzzella-input-area">
-        <div class="capuzzella-input-wrapper">
-          <textarea
-            class="capuzzella-input"
-            id="capuzzella-input"
-            placeholder="e.g., Change the heading to 'Welcome to My Site'"
-            rows="1"
-          ></textarea>
-          <button class="capuzzella-send-btn" id="capuzzella-send-btn">
-            Send
-          </button>
-        </div>
-      </div>
-    `;
+
+    container.innerHTML = window.CapuzzellaTemplate.getEditorHTML(PAGE_PATH);
 
     // Attach event listeners
     const input = document.getElementById('capuzzella-input');
     const sendBtn = document.getElementById('capuzzella-send-btn');
     const publishBtn = document.getElementById('capuzzella-publish-btn');
     const unpublishBtn = document.getElementById('capuzzella-unpublish-btn');
+    const refreshBtn = document.getElementById('capuzzella-refresh-btn');
+    const optionsBtn = document.getElementById('capuzzella-options-btn');
+    const dropdownMenu = document.getElementById('capuzzella-dropdown-menu');
 
     input.addEventListener('keydown', handleKeyDown);
     input.addEventListener('input', autoResize);
     sendBtn.addEventListener('click', sendMessage);
+    
+    // Initialize textarea height on load
+    autoResize();
     publishBtn.addEventListener('click', publishPage);
     unpublishBtn.addEventListener('click', unpublishPage);
+    refreshBtn.addEventListener('click', refreshPageContent);
+
+    // Dropdown toggle
+    optionsBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      dropdownMenu.classList.toggle('open');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function (e) {
+      if (!dropdownMenu.contains(e.target) && e.target !== optionsBtn) {
+        dropdownMenu.classList.remove('open');
+      }
+    });
+
+    // Close dropdown when clicking menu items (except links which navigate away)
+    dropdownMenu.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', function () {
+        dropdownMenu.classList.remove('open');
+      });
+    });
 
     // Restore any saved chat messages from previous session
     restoreMessages();
@@ -166,6 +203,7 @@
   function updateStatusUI() {
     const statusEl = document.getElementById('capuzzella-publish-status');
     const publishBtn = document.getElementById('capuzzella-publish-btn');
+    const publishText = document.getElementById('capuzzella-publish-text');
     const unpublishBtn = document.getElementById('capuzzella-unpublish-btn');
 
     if (!statusEl) return;
@@ -181,8 +219,8 @@
             Unpublished changes
           </span>
         `;
-        publishBtn.textContent = 'Publish Changes';
-        publishBtn.style.display = 'block';
+        if (publishText) publishText.textContent = 'Publish Changes';
+        publishBtn.style.display = 'flex';
         unpublishBtn.style.display = 'none';
       } else {
         // Published and up to date - show Unpublish button
@@ -193,7 +231,7 @@
           </span>
         `;
         publishBtn.style.display = 'none';
-        unpublishBtn.style.display = 'block';
+        unpublishBtn.style.display = 'flex';
       }
     } else {
       // Draft - show Publish button
@@ -203,8 +241,8 @@
           Draft
         </span>
       `;
-      publishBtn.textContent = 'Publish';
-      publishBtn.style.display = 'block';
+      if (publishText) publishText.textContent = 'Publish';
+      publishBtn.style.display = 'flex';
       unpublishBtn.style.display = 'none';
     }
 
@@ -225,9 +263,19 @@
    * Auto-resize textarea based on content
    */
   function autoResize(e) {
-    const textarea = e.target;
+    const textarea = e ? e.target : document.getElementById('capuzzella-input');
+    if (!textarea) return;
+    
     textarea.style.height = 'auto';
-    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    const newHeight = Math.min(textarea.scrollHeight, 200);
+    textarea.style.height = newHeight + 'px';
+    
+    // Show scrollbar only when content exceeds max height
+    if (textarea.scrollHeight > 200) {
+      textarea.classList.add('has-overflow');
+    } else {
+      textarea.classList.remove('has-overflow');
+    }
   }
 
   /**
@@ -278,14 +326,12 @@
       // Add assistant message
       addMessage('assistant', data.message);
 
-      // Reload the page if HTML was updated
+      // Update the page content dynamically if HTML was updated
       if (data.updatedHtml) {
-        addMessage('system', 'Page updated. Reloading...');
-        // Save messages before reload so they persist
-        saveMessages();
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        updatePageContent(data.updatedHtml);
+        addMessage('system', 'Page updated!');
+        // Refresh publish status since content changed
+        fetchPublishStatus();
       }
 
     } catch (error) {
@@ -351,9 +397,10 @@
    */
   async function publishPage() {
     const publishBtn = document.getElementById('capuzzella-publish-btn');
-    const originalText = publishBtn.textContent;
+    const publishText = document.getElementById('capuzzella-publish-text');
+    const originalText = publishText ? publishText.textContent : 'Publish';
     publishBtn.disabled = true;
-    publishBtn.textContent = 'Publishing...';
+    if (publishText) publishText.textContent = 'Publishing...';
 
     try {
       const response = await fetch(`/publish/${PAGE_PATH}`, {
@@ -375,7 +422,7 @@
       addMessage('system', 'Error: Failed to publish page.');
     } finally {
       publishBtn.disabled = false;
-      publishBtn.textContent = originalText;
+      if (publishText) publishText.textContent = originalText;
     }
   }
 
@@ -384,8 +431,9 @@
    */
   async function unpublishPage() {
     const unpublishBtn = document.getElementById('capuzzella-unpublish-btn');
+    const unpublishText = document.getElementById('capuzzella-unpublish-text');
     unpublishBtn.disabled = true;
-    unpublishBtn.textContent = 'Unpublishing...';
+    if (unpublishText) unpublishText.textContent = 'Unpublishing...';
 
     try {
       const response = await fetch(`/publish/${PAGE_PATH}`, {
@@ -407,7 +455,7 @@
       addMessage('system', 'Error: Failed to unpublish page.');
     } finally {
       unpublishBtn.disabled = false;
-      unpublishBtn.textContent = 'Unpublish';
+      if (unpublishText) unpublishText.textContent = 'Unpublish';
     }
   }
 

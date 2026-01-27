@@ -45,6 +45,11 @@ app.use(session({
 // Serve editor assets
 app.use('/editor', express.static(path.join(__dirname, '../editor')));
 
+// Serve @tailwindplus/elements from node_modules
+app.use('/vendor/tailwindplus-elements', express.static(
+  path.join(__dirname, '../node_modules/@tailwindplus/elements/dist')
+));
+
 // Routes
 app.use('/auth', authRoutes);
 app.use('/api', apiRoutes);

@@ -19,6 +19,7 @@
   "license": "ISC",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.33.1",
+    "@tailwindplus/elements": "^1.0.22",
     "bcrypt": "^5.1.1",
     "better-sqlite3": "^11.7.0",
     "better-sqlite3-session-store": "^0.1.0",
