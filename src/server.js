@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import { getDb } from './db/index.js';
 import apiRoutes from './routes/api.js';
 import authRoutes from './routes/auth.js';
+import pagesRoutes from './routes/pages.js';
 import previewRoutes from './routes/preview.js';
 import publishRoutes from './routes/publish.js';
 import settingsRoutes from './routes/settings.js';
@@ -53,6 +54,7 @@ app.use('/vendor/tailwindplus-elements', express.static(
 // Routes
 app.use('/auth', authRoutes);
 app.use('/api', apiRoutes);
+app.use('/pages', pagesRoutes);
 app.use('/publish', publishRoutes);
 app.use('/settings', settingsRoutes);
 
