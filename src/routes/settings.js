@@ -27,6 +27,7 @@ router.get('/', (req, res) => {
       <div class="max-w-2xl mx-auto py-12 px-4">
         <div class="flex justify-between items-center mb-8">
           <h1 class="text-3xl font-bold text-gray-900">Settings</h1>
+          <a href="/auth/logout" class="text-red-600 hover:text-red-800">Sign out</a>
         </div>
 
         ${message ? `
@@ -76,10 +77,6 @@ router.get('/', (req, res) => {
           </form>
         </div>
 
-        <!-- Logout -->
-        <div class="mt-6 text-center">
-          <a href="/auth/logout" class="text-red-600 hover:text-red-800">Sign out</a>
-        </div>
       </div>
     </body>
     </html>
