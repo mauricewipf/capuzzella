@@ -206,22 +206,18 @@
 
 /* Input area */
 .capuzzella-input-area {
-  padding: 12px;
-  border-top: 1px solid #374151;
-}
-
-.capuzzella-input-wrapper {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  margin: 12px;
+  padding: 12px;
   background-color: #1f2937;
   border: 1px solid #374151;
   border-radius: 12px;
-  padding: 12px;
   transition: border-color 0.15s;
 }
 
-.capuzzella-input-wrapper:focus-within {
+.capuzzella-input-area:focus-within {
   border-color: #4f46e5;
 }
 
