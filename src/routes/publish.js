@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { requireAuth, requirePasswordChanged } from '../middleware/auth.js';
 import { listPages } from '../services/pages.js';
+import { generateSitemap } from '../services/sitemap.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,25 +24,25 @@ router.use(requirePasswordChanged);
 router.post('/', async (req, res) => {
   try {
     const pages = await listPages();
-    
+
     if (pages.length === 0) {
       return res.status(400).json({ error: 'No pages to publish' });
     }
-    
+
     // Ensure public directory exists
     await fs.mkdir(PUBLIC_DIR, { recursive: true });
-    
+
     const published = [];
     const errors = [];
-    
+
     for (const pagePath of pages) {
       try {
         const sourcePath = path.join(DRAFTS_DIR, pagePath);
         const destPath = path.join(PUBLIC_DIR, pagePath);
-        
+
         // Ensure destination directory exists
         await fs.mkdir(path.dirname(destPath), { recursive: true });
-        
+
         // Copy file
         await fs.copyFile(sourcePath, destPath);
         published.push(pagePath);
@@ -50,11 +51,20 @@ router.post('/', async (req, res) => {
         errors.push({ path: pagePath, error: error.message });
       }
     }
-    
+
+    // Regenerate sitemap after publishing
+    let sitemap;
+    try {
+      sitemap = await generateSitemap();
+    } catch (sitemapError) {
+      console.error('Failed to generate sitemap:', sitemapError);
+    }
+
     res.json({
       success: true,
       published,
-      errors: errors.length > 0 ? errors : undefined
+      errors: errors.length > 0 ? errors : undefined,
+      sitemap
     });
   } catch (error) {
     console.error('Publish error:', error);
@@ -67,11 +77,11 @@ router.post('/', async (req, res) => {
  */
 router.get('/status/*', async (req, res) => {
   const pagePath = req.params[0];
-  
+
   try {
     const draftPath = path.join(DRAFTS_DIR, pagePath);
     const publicPath = path.join(PUBLIC_DIR, pagePath);
-    
+
     // Check if draft exists
     let draftExists = false;
     try {
@@ -80,11 +90,11 @@ router.get('/status/*', async (req, res) => {
     } catch {
       draftExists = false;
     }
-    
+
     if (!draftExists) {
       return res.status(404).json({ error: 'Page not found' });
     }
-    
+
     // Check if published version exists
     let isPublished = false;
     try {
@@ -93,7 +103,7 @@ router.get('/status/*', async (req, res) => {
     } catch {
       isPublished = false;
     }
-    
+
     // If published, check if draft has unpublished changes
     let hasUnpublishedChanges = false;
     if (isPublished) {
@@ -103,7 +113,7 @@ router.get('/status/*', async (req, res) => {
       ]);
       hasUnpublishedChanges = draftStat.mtime > publicStat.mtime;
     }
-    
+
     res.json({
       pagePath,
       isPublished,
@@ -120,27 +130,36 @@ router.get('/status/*', async (req, res) => {
  */
 router.post('/*', async (req, res) => {
   const pagePath = req.params[0];
-  
+
   try {
     const sourcePath = path.join(DRAFTS_DIR, pagePath);
     const destPath = path.join(PUBLIC_DIR, pagePath);
-    
+
     // Check if source exists
     try {
       await fs.access(sourcePath);
     } catch {
       return res.status(404).json({ error: 'Page not found in drafts' });
     }
-    
+
     // Ensure destination directory exists
     await fs.mkdir(path.dirname(destPath), { recursive: true });
-    
+
     // Copy file
     await fs.copyFile(sourcePath, destPath);
-    
+
+    // Regenerate sitemap after publishing
+    let sitemap;
+    try {
+      sitemap = await generateSitemap();
+    } catch (sitemapError) {
+      console.error('Failed to generate sitemap:', sitemapError);
+    }
+
     res.json({
       success: true,
-      published: pagePath
+      published: pagePath,
+      sitemap
     });
   } catch (error) {
     console.error('Publish error:', error);
@@ -153,23 +172,32 @@ router.post('/*', async (req, res) => {
  */
 router.delete('/*', async (req, res) => {
   const pagePath = req.params[0];
-  
+
   try {
     const publicPath = path.join(PUBLIC_DIR, pagePath);
-    
+
     // Check if published version exists
     try {
       await fs.access(publicPath);
     } catch {
       return res.status(404).json({ error: 'Page is not published' });
     }
-    
+
     // Remove the published file
     await fs.unlink(publicPath);
-    
+
+    // Regenerate sitemap after unpublishing
+    let sitemap;
+    try {
+      sitemap = await generateSitemap();
+    } catch (sitemapError) {
+      console.error('Failed to generate sitemap:', sitemapError);
+    }
+
     res.json({
       success: true,
-      unpublished: pagePath
+      unpublished: pagePath,
+      sitemap
     });
   } catch (error) {
     console.error('Unpublish error:', error);
