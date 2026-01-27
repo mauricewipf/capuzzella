@@ -5,7 +5,9 @@
 (function () {
   'use strict';
 
-  const PAGE_PATH = window.CAPUZZELLA_PAGE_PATH || 'index.html';
+  // Read page path from data attribute (more reliable than window variable)
+  const editorContainer = document.getElementById('capuzzella-editor');
+  const PAGE_PATH = editorContainer?.dataset.pagePath || window.CAPUZZELLA_PAGE_PATH || 'index.html';
   const API_BASE = '/api';
   const STORAGE_KEY = `capuzzella_chat_${PAGE_PATH}`;
 
@@ -127,18 +129,20 @@
     const publishBtn = document.getElementById('capuzzella-publish-btn');
     const unpublishBtn = document.getElementById('capuzzella-unpublish-btn');
     const refreshBtn = document.getElementById('capuzzella-refresh-btn');
+    const exitBtn = document.getElementById('capuzzella-exit-btn');
     const optionsBtn = document.getElementById('capuzzella-options-btn');
     const dropdownMenu = document.getElementById('capuzzella-dropdown-menu');
 
     input.addEventListener('keydown', handleKeyDown);
     input.addEventListener('input', autoResize);
     sendBtn.addEventListener('click', sendMessage);
-    
+
     // Initialize textarea height on load
     autoResize();
     publishBtn.addEventListener('click', publishPage);
     unpublishBtn.addEventListener('click', unpublishPage);
     refreshBtn.addEventListener('click', refreshPageContent);
+    exitBtn.addEventListener('click', exitEditMode);
 
     // Dropdown toggle
     optionsBtn.addEventListener('click', function (e) {
@@ -265,11 +269,11 @@
   function autoResize(e) {
     const textarea = e ? e.target : document.getElementById('capuzzella-input');
     if (!textarea) return;
-    
+
     textarea.style.height = 'auto';
     const newHeight = Math.min(textarea.scrollHeight, 200);
     textarea.style.height = newHeight + 'px';
-    
+
     // Show scrollbar only when content exceeds max height
     if (textarea.scrollHeight > 200) {
       textarea.classList.add('has-overflow');
@@ -330,10 +334,10 @@
       if (data.action === 'create' && data.newPagePath) {
         // New page was created - offer to navigate
         addMessage('system', `New page created: ${data.newPagePath}`);
-        
+
         // Save current chat messages before navigation
         saveMessages();
-        
+
         // Create a clickable link to navigate to the new page
         const messagesContainer = document.getElementById('capuzzella-messages');
         const linkEl = document.createElement('div');
@@ -341,7 +345,7 @@
         linkEl.innerHTML = `<a href="/${data.newPagePath}?edit=true" class="capuzzella-new-page-link">Open new page →</a>`;
         messagesContainer.appendChild(linkEl);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        
+
       } else if (data.updatedHtml) {
         // Current page was updated
         updatePageContent(data.updatedHtml);
@@ -472,6 +476,19 @@
     } finally {
       unpublishBtn.disabled = false;
       if (unpublishText) unpublishText.textContent = 'Unpublish';
+    }
+  }
+
+  /**
+   * Exit edit mode and navigate to the published page or fallback to index
+   */
+  function exitEditMode() {
+    // If the page is published, go to the published version
+    // Otherwise, fallback to index.html
+    if (publishStatus.isPublished) {
+      window.location.href = `/${PAGE_PATH}`;
+    } else {
+      window.location.href = '/index.html';
     }
   }
 

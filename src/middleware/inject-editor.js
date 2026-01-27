@@ -64,17 +64,13 @@ export function injectEditor(html, pagePath) {
 <body>
   <div class="capuzzella-layout">
     <iframe id="capuzzella-iframe" srcdoc="${escapedHtml}"></iframe>
-    <div id="capuzzella-editor">
+    <div id="capuzzella-editor" data-page-path="${pagePath}">
       <!-- Editor UI will be initialized by editor.js -->
     </div>
   </div>
   
-  <script>
-    window.CAPUZZELLA_PAGE_PATH = '${pagePath}';
-    window.CAPUZZELLA_INITIAL_HTML = ${JSON.stringify(html)};
-  </script>
-  <script src="/editor/editor-template.js" defer></script>
-  <script src="/editor/editor.js" defer></script>
+  <script src="/editor/editor-template.js?v=${Date.now()}" defer></script>
+  <script src="/editor/editor.js?v=${Date.now()}" defer></script>
 </body>
 </html>`;
 }
