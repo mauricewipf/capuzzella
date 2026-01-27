@@ -484,11 +484,11 @@
    */
   function exitEditMode() {
     // If the page is published, go to the published version
-    // Otherwise, fallback to index.html
+    // Otherwise, open with ?draft=true to view the draft
     if (publishStatus.isPublished) {
       window.location.href = `/${PAGE_PATH}`;
     } else {
-      window.location.href = '/index.html';
+      window.location.href = `/${PAGE_PATH}?draft=true`;
     }
   }
 
