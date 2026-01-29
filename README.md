@@ -1,4 +1,4 @@
-# Capuzzella
+# Capuzzella 🐴🔥
 
 AI-Powered Website Builder - Edit websites using natural language.
 
