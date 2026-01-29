@@ -102,7 +102,7 @@ capuzzella/
 
 ## Unified Design
 
-Store UI components like Card, Button, Dialog, etc. in this directory. Capuzzella uses it for a unified/ corportate design across all pages.
+Store UI components like Card, Button, Dialog, etc. in this directory. Capuzzella uses it for a unified/ corporate design across all pages.
 
 ```
 capuzzella/
