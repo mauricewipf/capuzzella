@@ -7,7 +7,7 @@ AI-Powered Website Builder - Edit websites using natural language.
 Capuzzella is a website builder where:
 - **Frontend**: Static HTML files served directly (the published site)
 - **Preview Mode**: Same HTML + injected AI chat sidebar, activated via `?edit=true`
-- **AI Chat**: Users describe changes in natural language; AI modifies HTML directly
+- **AI Chat**: Users describe changes in natural language; AI modifies HTML directly. **Bring your own API Key**.
 - **Publishing**: Copy edited HTML from drafts to public directory
 
 ## Getting Started
@@ -78,40 +78,18 @@ node scripts/create-user.js username password
 
 ### Example Commands
 
-- "Change the heading to 'Welcome to Our Store'"
+- "Change the heading to 'Welcome to Our Website'"
 - "Make the hero section background blue"
 - "Add a new section with three feature cards"
 - "Remove the contact form"
 - "Change the button text to 'Get Started'"
 
-## Project Structure
+## Project Structure of relevant files
 
 ```
 capuzzella/
 ├── src/
 │   ├── server.js              # Express app entry
-│   ├── routes/
-│   │   ├── auth.js            # Login/logout/session
-│   │   ├── preview.js         # Preview mode handler
-│   │   ├── api.js             # AI chat + page operations
-│   │   └── publish.js         # Publishing workflow
-│   ├── services/
-│   │   ├── ai/
-│   │   │   ├── index.js       # AI provider factory
-│   │   │   ├── openai.js      # OpenAI adapter
-│   │   │   ├── anthropic.js   # Anthropic adapter
-│   │   │   └── prompts.js     # System prompts
-│   │   ├── pages.js           # Read/write/delete HTML files
-│   │   └── auth.js            # User authentication logic
-│   ├── middleware/
-│   │   ├── auth.js            # Session validation
-│   │   └── inject-editor.js   # Inject chat UI into HTML
-│   └── db/
-│       ├── index.js           # Database connection
-│       └── schema.sql         # Users table
-├── editor/                    # Chat UI assets (injected)
-│   ├── editor.js
-│   └── editor.css
 ├── drafts/                    # Working HTML files (editable)
 ├── public/                    # Published HTML files (read-only)
 ├── components/                # Reusable component templates
@@ -122,25 +100,25 @@ capuzzella/
 └── package.json
 ```
 
-## API Endpoints
+## Unified Design
 
-### Authentication
-- `GET /auth/login` - Login page
-- `POST /auth/login` - Handle login
-- `GET /auth/logout` - Logout
+Store UI components like Card, Button, Dialog, etc. in this directory. Capuzzella uses it for a unified/ corportate design across all pages.
 
-### Pages API (requires auth)
-- `GET /api/pages` - List all draft pages
-- `GET /api/pages/:path` - Get page content
-- `PUT /api/pages/:path` - Update page content
-- `DELETE /api/pages/:path` - Delete a page
+```
+capuzzella/
+└── components/
+    ├── card.html
+    └── ...
+```
 
-### Chat API (requires auth)
-- `POST /api/chat` - Send message to AI for page editing
+## Pages
 
-### Publishing (requires auth)
-- `POST /publish` - Publish all drafts
-- `POST /publish/:path` - Publish specific page
+- `/*.html` - View the published page
+- `/sitemap.xml` - The Sitemap of all published pages
+- `/*.html?edit=true` - Page in Edit Mode with AI Chat  (Auth required)
+- `/*.html?draft=true` - Draft Version of Page without AI Chat (Auth required)
+- `/settings` - User Settings (Auth required)
+- `/page` - List of all pages (Auth required)
 
 ## Tech Stack
 
