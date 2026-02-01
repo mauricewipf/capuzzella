@@ -1,32 +1,13 @@
-import express from 'express';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { Elysia } from 'elysia';
 import { injectEditor } from '../middleware/inject-editor.js';
+import { createSessionCookie, saveSession } from '../middleware/session.js';
 import { getPage } from '../services/pages.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const router = express.Router();
-
 /**
- * Handle draft preview mode requests (URLs with ?draft=true or ?drafts=true)
- * Serves draft HTML without the editor UI
+ * Normalize page path from URL
  */
-router.get('*', async (req, res, next) => {
-  // Only handle requests with ?draft=true or ?drafts=true
-  if (req.query.draft !== 'true' && req.query.drafts !== 'true') {
-    return next();
-  }
-
-  // Require authentication for draft mode
-  if (!req.session.userId) {
-    req.session.returnTo = req.originalUrl;
-    return res.redirect('/auth/login');
-  }
-
-  // Determine the page path from the URL
-  let pagePath = req.path;
+function normalizePath(pathname) {
+  let pagePath = pathname;
 
   // Default to index.html for root or directory paths
   if (pagePath === '/' || pagePath.endsWith('/')) {
@@ -39,70 +20,99 @@ router.get('*', async (req, res, next) => {
   }
 
   // Remove leading slash for file operations
-  pagePath = pagePath.replace(/^\//, '');
+  return pagePath.replace(/^\//, '');
+}
+
+/**
+ * Handle draft preview mode
+ */
+export async function handleDraftPreview({ path, query, session, set }) {
+  // Only handle requests with ?draft=true
+  if (query.draft !== 'true' && query.drafts !== 'true') {
+    return null;
+  }
+
+  // Require authentication
+  if (!session.userId) {
+    session.returnTo = path + '?draft=true';
+    // Manually save session and return redirect with cookie
+    saveSession(session._sessionId, session._getData());
+    return new Response(null, {
+      status: 302,
+      headers: {
+        'Location': '/auth/login',
+        'Set-Cookie': createSessionCookie(session._sessionId)
+      }
+    });
+  }
+
+  const pagePath = normalizePath(path);
 
   try {
     const html = await getPage(pagePath);
 
     if (!html) {
-      return res.status(404).send('Page not found in drafts');
+      set.status = 404;
+      return 'Page not found in drafts';
     }
 
-    // Serve the draft HTML without the editor
-    res.type('html').send(html);
+    set.headers['Content-Type'] = 'text/html';
+    return html;
   } catch (error) {
     console.error('Draft preview error:', error);
-    res.status(500).send('Failed to load draft');
+    set.status = 500;
+    return 'Failed to load draft';
   }
-});
+}
 
 /**
- * Handle preview mode requests (URLs with ?edit=true)
- * Serves draft HTML with injected editor UI
+ * Handle edit mode
  */
-router.get('*', async (req, res, next) => {
+export async function handleEditMode({ path, query, session, set }) {
   // Only handle requests with ?edit=true
-  if (req.query.edit !== 'true') {
-    return next();
+  if (query.edit !== 'true') {
+    return null;
   }
 
-  // Require authentication for edit mode
-  if (!req.session.userId) {
-    req.session.returnTo = req.originalUrl;
-    return res.redirect('/auth/login');
+  // Require authentication
+  if (!session.userId) {
+    session.returnTo = path + '?edit=true';
+    // Manually save session and return redirect with cookie
+    saveSession(session._sessionId, session._getData());
+    return new Response(null, {
+      status: 302,
+      headers: {
+        'Location': '/auth/login',
+        'Set-Cookie': createSessionCookie(session._sessionId)
+      }
+    });
   }
 
-  // Determine the page path from the URL
-  let pagePath = req.path;
-
-  // Default to index.html for root or directory paths
-  if (pagePath === '/' || pagePath.endsWith('/')) {
-    pagePath = pagePath + 'index.html';
-  }
-
-  // Ensure .html extension
-  if (!pagePath.endsWith('.html')) {
-    pagePath = pagePath + '.html';
-  }
-
-  // Remove leading slash for file operations
-  pagePath = pagePath.replace(/^\//, '');
+  const pagePath = normalizePath(path);
 
   try {
     const html = await getPage(pagePath);
 
     if (!html) {
-      return res.status(404).send('Page not found in drafts');
+      set.status = 404;
+      return 'Page not found in drafts';
     }
 
     // Inject the editor UI into the HTML
     const modifiedHtml = injectEditor(html, pagePath);
 
-    res.type('html').send(modifiedHtml);
+    set.headers['Content-Type'] = 'text/html';
+    return modifiedHtml;
   } catch (error) {
     console.error('Preview error:', error);
-    res.status(500).send('Failed to load preview');
+    set.status = 500;
+    return 'Failed to load preview';
   }
-});
+}
 
-export default router;
+/**
+ * Preview routes plugin - empty as preview is handled in server.js
+ */
+export const previewRoutes = new Elysia();
+
+export default previewRoutes;

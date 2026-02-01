@@ -1,5 +1,4 @@
-import bcrypt from 'bcrypt';
-import Database from 'better-sqlite3';
+import { Database } from 'bun:sqlite';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
@@ -16,7 +15,7 @@ let db = null;
 
 /**
  * Get or create database connection
- * @returns {Database.Database}
+ * @returns {Database}
  */
 export function getDb() {
   if (!db) {
@@ -29,7 +28,7 @@ export function getDb() {
     db = new Database(DB_PATH);
 
     // Enable foreign keys
-    db.pragma('foreign_keys = ON');
+    db.exec('PRAGMA foreign_keys = ON');
 
     // Initialize schema
     initializeSchema();
@@ -54,16 +53,19 @@ function initializeSchema() {
 /**
  * Seed default admin user if no users exist
  */
-function seedDefaultUser() {
-  const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get();
+async function seedDefaultUser() {
+  const userCount = db.query('SELECT COUNT(*) as count FROM users').get();
 
   if (userCount.count === 0) {
     const username = 'admin';
     const password = crypto.randomBytes(12).toString('base64').slice(0, 16);
-    const passwordHash = bcrypt.hashSync(password, SALT_ROUNDS);
+    const passwordHash = await Bun.password.hash(password, {
+      algorithm: 'bcrypt',
+      cost: SALT_ROUNDS
+    });
 
     // Set must_change_password = 1 for generated passwords
-    db.prepare('INSERT INTO users (username, password_hash, must_change_password) VALUES (?, ?, 1)').run(username, passwordHash);
+    db.query('INSERT INTO users (username, password_hash, must_change_password) VALUES (?, ?, 1)').run(username, passwordHash);
 
     console.log('');
     console.log('='.repeat(50));

@@ -1,71 +1,85 @@
+import { createSessionCookie, saveSession } from './session.js';
+
 /**
- * Middleware to require authentication
- * Redirects to login page for HTML requests, returns 401 for API requests
- * 
- * @param {import('express').Request} req
- * @param {import('express').Response} res
- * @param {import('express').NextFunction} next
+ * Authentication guards for Elysia
  */
-export function requireAuth(req, res, next) {
-  if (req.session.userId) {
-    return next();
+
+/**
+ * Check if request is an API request
+ */
+function isApiRequest(path, headers) {
+  return path.startsWith('/api') ||
+    path.startsWith('/publish') ||
+    headers['x-requested-with']?.toLowerCase() === 'xmlhttprequest' ||
+    headers.accept?.includes('application/json');
+}
+
+/**
+ * Guard to require authentication
+ * Returns error response or redirect if not authenticated
+ */
+export function requireAuth({ session, path, request, set }) {
+  if (session.userId) {
+    return; // Authenticated, continue (return undefined)
   }
-  
+
+  const headers = Object.fromEntries(request.headers);
+
   // Check if this is an API request
-  const isApiRequest = req.originalUrl.startsWith('/api') || 
-                       req.originalUrl.startsWith('/publish') ||
-                       req.xhr || 
-                       req.headers.accept?.includes('application/json');
-  
-  if (isApiRequest) {
-    return res.status(401).json({ error: 'Authentication required' });
+  if (isApiRequest(path, headers)) {
+    set.status = 401;
+    return { error: 'Authentication required' };
   }
-  
+
   // Store the URL they were trying to access
-  req.session.returnTo = req.originalUrl;
-  res.redirect('/auth/login');
-}
+  session.returnTo = path + (request.url.includes('?') ? '?' + request.url.split('?')[1] : '');
 
-/**
- * Middleware to enforce password change
- * Redirects to settings page if user must change their generated password
- * Should be applied after requireAuth on routes that should be blocked
- * 
- * @param {import('express').Request} req
- * @param {import('express').Response} res
- * @param {import('express').NextFunction} next
- */
-export function requirePasswordChanged(req, res, next) {
-  if (req.session.mustChangePassword) {
-    // Check if this is an API request
-    const isApiRequest = req.originalUrl.startsWith('/api') || 
-                         req.originalUrl.startsWith('/publish') ||
-                         req.xhr || 
-                         req.headers.accept?.includes('application/json');
-    
-    if (isApiRequest) {
-      return res.status(403).json({ error: 'You must change your password before accessing this resource' });
+  // Manually save session and return redirect with cookie
+  saveSession(session._sessionId, session._getData());
+  return new Response(null, {
+    status: 302,
+    headers: {
+      'Location': '/auth/login',
+      'Set-Cookie': createSessionCookie(session._sessionId)
     }
-    
-    return res.redirect('/settings?message=' + encodeURIComponent('Please change your generated password before continuing'));
-  }
-  
-  next();
+  });
 }
 
 /**
- * Middleware to check if user is authenticated (non-blocking)
- * Sets req.isAuthenticated for use in templates/handlers
- * 
- * @param {import('express').Request} req
- * @param {import('express').Response} res
- * @param {import('express').NextFunction} next
+ * Guard to enforce password change
  */
-export function checkAuth(req, res, next) {
-  req.isAuthenticated = !!req.session.userId;
-  req.user = req.session.userId ? {
-    id: req.session.userId,
-    username: req.session.username
-  } : null;
-  next();
+export function requirePasswordChanged({ session, path, request, set }) {
+  if (!session.mustChangePassword) {
+    return; // Password already changed, continue
+  }
+
+  const headers = Object.fromEntries(request.headers);
+
+  // Check if this is an API request
+  if (isApiRequest(path, headers)) {
+    set.status = 403;
+    return { error: 'You must change your password before accessing this resource' };
+  }
+
+  // Return redirect (session already exists, cookie should be set)
+  return new Response(null, {
+    status: 302,
+    headers: {
+      'Location': '/settings?message=' + encodeURIComponent('Please change your generated password before continuing')
+    }
+  });
+}
+
+/**
+ * Check if user is authenticated (non-blocking)
+ * Adds isAuthenticated and user to context
+ */
+export function checkAuth({ session }) {
+  return {
+    isAuthenticated: !!session.userId,
+    user: session.userId ? {
+      id: session.userId,
+      username: session.username
+    } : null
+  };
 }

@@ -1,4 +1,3 @@
-import bcrypt from 'bcrypt';
 import { getDb } from '../db/index.js';
 
 const SALT_ROUNDS = 10;
@@ -13,13 +12,13 @@ const SALT_ROUNDS = 10;
 export async function authenticateUser(username, password) {
   const db = getDb();
 
-  const user = db.prepare('SELECT id, username, password_hash, must_change_password FROM users WHERE username = ?').get(username);
+  const user = db.query('SELECT id, username, password_hash, must_change_password FROM users WHERE username = ?').get(username);
 
   if (!user) {
     return null;
   }
 
-  const isValid = await bcrypt.compare(password, user.password_hash);
+  const isValid = await Bun.password.verify(password, user.password_hash);
 
   if (!isValid) {
     return null;
@@ -43,12 +42,19 @@ export async function authenticateUser(username, password) {
 export async function createUser(username, password, mustChangePassword = false) {
   const db = getDb();
 
-  const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+  const passwordHash = await Bun.password.hash(password, {
+    algorithm: 'bcrypt',
+    cost: SALT_ROUNDS
+  });
 
-  const result = db.prepare('INSERT INTO users (username, password_hash, must_change_password) VALUES (?, ?, ?)').run(username, passwordHash, mustChangePassword ? 1 : 0);
+  const stmt = db.query('INSERT INTO users (username, password_hash, must_change_password) VALUES (?, ?, ?)');
+  stmt.run(username, passwordHash, mustChangePassword ? 1 : 0);
+
+  // Get the last inserted row ID
+  const lastRow = db.query('SELECT last_insert_rowid() as id').get();
 
   return {
-    id: result.lastInsertRowid,
+    id: lastRow.id,
     username,
     mustChangePassword
   };
@@ -63,7 +69,7 @@ export async function createUser(username, password, mustChangePassword = false)
 export function getUserById(id) {
   const db = getDb();
 
-  const user = db.prepare('SELECT id, username FROM users WHERE id = ?').get(id);
+  const user = db.query('SELECT id, username FROM users WHERE id = ?').get(id);
 
   return user || null;
 }
@@ -77,7 +83,7 @@ export function getUserById(id) {
 export function usernameExists(username) {
   const db = getDb();
 
-  const user = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
+  const user = db.query('SELECT id FROM users WHERE username = ?').get(username);
 
   return !!user;
 }
@@ -93,13 +99,13 @@ export function usernameExists(username) {
 export async function updatePassword(userId, currentPassword, newPassword) {
   const db = getDb();
 
-  const user = db.prepare('SELECT id, password_hash FROM users WHERE id = ?').get(userId);
+  const user = db.query('SELECT id, password_hash FROM users WHERE id = ?').get(userId);
 
   if (!user) {
     return { success: false, error: 'User not found' };
   }
 
-  const isValid = await bcrypt.compare(currentPassword, user.password_hash);
+  const isValid = await Bun.password.verify(currentPassword, user.password_hash);
 
   if (!isValid) {
     return { success: false, error: 'Current password is incorrect' };
@@ -109,10 +115,13 @@ export async function updatePassword(userId, currentPassword, newPassword) {
     return { success: false, error: 'New password must be at least 6 characters' };
   }
 
-  const newPasswordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  const newPasswordHash = await Bun.password.hash(newPassword, {
+    algorithm: 'bcrypt',
+    cost: SALT_ROUNDS
+  });
 
   // Clear must_change_password flag when user updates their password
-  db.prepare('UPDATE users SET password_hash = ?, must_change_password = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(newPasswordHash, userId);
+  db.query('UPDATE users SET password_hash = ?, must_change_password = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(newPasswordHash, userId);
 
   return { success: true };
 }

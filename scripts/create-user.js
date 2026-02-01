@@ -1,12 +1,11 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 /**
  * Script to create a new user in the Capuzzella database
  * 
- * Usage: node scripts/create-user.js <username> <password>
+ * Usage: bun run scripts/create-user.js <username> <password>
  */
 
-import 'dotenv/config';
 import { getDb, closeDb } from '../src/db/index.js';
 import { createUser, usernameExists } from '../src/services/auth.js';
 
@@ -14,7 +13,7 @@ async function main() {
   const [,, username, password] = process.argv;
   
   if (!username || !password) {
-    console.error('Usage: node scripts/create-user.js <username> <password>');
+    console.error('Usage: bun run scripts/create-user.js <username> <password>');
     process.exit(1);
   }
   

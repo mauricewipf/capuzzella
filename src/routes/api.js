@@ -1,144 +1,159 @@
-import express from 'express';
+import { Elysia } from 'elysia';
 import { requireAuth, requirePasswordChanged } from '../middleware/auth.js';
 import { processChat } from '../services/ai/index.js';
 import { deletePage, getPage, listPages, savePage } from '../services/pages.js';
 
-const router = express.Router();
-
-// All API routes require authentication and password to be changed
-router.use(requireAuth);
-router.use(requirePasswordChanged);
-
 /**
- * POST /api/chat - Process AI chat message for page editing or creation
+ * API routes plugin for Elysia
  */
-router.post('/chat', async (req, res) => {
-  const { message, pagePath } = req.body;
+export const apiRoutes = new Elysia({ prefix: '/api' })
+  // Apply auth guards to all routes in this group
+  .onBeforeHandle(({ session, request, set }) => {
+    const url = new URL(request.url);
+    const fullPath = url.pathname;
 
-  if (!message || !pagePath) {
-    return res.status(400).json({ error: 'Message and pagePath are required' });
-  }
+    const authResult = requireAuth({ session, path: fullPath, request, set });
+    if (authResult !== undefined) return authResult;
 
-  try {
-    // Get current page content (may be null if page doesn't exist)
-    const currentHtml = await getPage(pagePath);
+    const pwResult = requirePasswordChanged({ session, path: fullPath, request, set });
+    if (pwResult !== undefined) return pwResult;
+  })
 
-    const result = await processChat(message, currentHtml, pagePath);
+  /**
+   * POST /api/chat - Process AI chat message for page editing or creation
+   */
+  .post('/chat', async ({ body, set }) => {
+    const { message, pagePath } = body;
 
-    // Handle different actions
-    if (result.action === 'create' && result.newPagePath && result.updatedHtml) {
-      // Create a new page
-      await savePage(result.newPagePath, result.updatedHtml);
-      
-      res.json({
-        success: true,
-        action: 'create',
-        message: result.assistantMessage,
-        updatedHtml: result.updatedHtml,
-        newPagePath: result.newPagePath
-      });
-    } else if (result.action === 'edit' && result.updatedHtml) {
-      // Edit the current page
-      await savePage(pagePath, result.updatedHtml);
-      
-      res.json({
-        success: true,
-        action: 'edit',
-        message: result.assistantMessage,
-        updatedHtml: result.updatedHtml
-      });
-    } else {
-      // Just a response, no page changes
-      res.json({
-        success: true,
-        action: 'respond',
-        message: result.assistantMessage,
-        updatedHtml: null
-      });
+    if (!message || !pagePath) {
+      set.status = 400;
+      return { error: 'Message and pagePath are required' };
     }
-  } catch (error) {
-    console.error('Chat error:', error);
 
-    // Include more details in the error response for debugging
-    const errorDetails = {
-      error: 'Failed to process chat message',
-      message: error.message,
-      ...(process.env.NODE_ENV !== 'production' && {
-        stack: error.stack,
-        name: error.name
-      })
-    };
+    try {
+      // Get current page content (may be null if page doesn't exist)
+      const currentHtml = await getPage(pagePath);
 
-    res.status(500).json(errorDetails);
-  }
-});
+      const result = await processChat(message, currentHtml, pagePath);
 
-/**
- * GET /api/pages - List all pages in drafts
- */
-router.get('/pages', async (req, res) => {
-  try {
-    const pages = await listPages();
-    res.json({ pages });
-  } catch (error) {
-    console.error('List pages error:', error);
-    res.status(500).json({ error: 'Failed to list pages' });
-  }
-});
+      // Handle different actions
+      if (result.action === 'create' && result.newPagePath && result.updatedHtml) {
+        // Create a new page
+        await savePage(result.newPagePath, result.updatedHtml);
 
-/**
- * GET /api/pages/:pagePath - Get a specific page
- */
-router.get('/pages/*', async (req, res) => {
-  const pagePath = req.params[0];
+        return {
+          success: true,
+          action: 'create',
+          message: result.assistantMessage,
+          updatedHtml: result.updatedHtml,
+          newPagePath: result.newPagePath
+        };
+      } else if (result.action === 'edit' && result.updatedHtml) {
+        // Edit the current page
+        await savePage(pagePath, result.updatedHtml);
 
-  try {
-    const html = await getPage(pagePath);
+        return {
+          success: true,
+          action: 'edit',
+          message: result.assistantMessage,
+          updatedHtml: result.updatedHtml
+        };
+      } else {
+        // Just a response, no page changes
+        return {
+          success: true,
+          action: 'respond',
+          message: result.assistantMessage,
+          updatedHtml: null
+        };
+      }
+    } catch (error) {
+      console.error('Chat error:', error);
+
+      set.status = 500;
+      return {
+        error: 'Failed to process chat message',
+        message: error.message,
+        ...(process.env.NODE_ENV !== 'production' && {
+          stack: error.stack,
+          name: error.name
+        })
+      };
+    }
+  })
+
+  /**
+   * GET /api/pages - List all pages in drafts
+   */
+  .get('/pages', async ({ set }) => {
+    try {
+      const pages = await listPages();
+      return { pages };
+    } catch (error) {
+      console.error('List pages error:', error);
+      set.status = 500;
+      return { error: 'Failed to list pages' };
+    }
+  })
+
+  /**
+   * GET /api/pages/* - Get a specific page
+   */
+  .get('/pages/*', async ({ params, set }) => {
+    const pagePath = params['*'];
+
+    try {
+      const html = await getPage(pagePath);
+
+      if (!html) {
+        set.status = 404;
+        return { error: 'Page not found' };
+      }
+
+      return { html };
+    } catch (error) {
+      console.error('Get page error:', error);
+      set.status = 500;
+      return { error: 'Failed to get page' };
+    }
+  })
+
+  /**
+   * PUT /api/pages/* - Save/update a page
+   */
+  .put('/pages/*', async ({ params, body, set }) => {
+    const pagePath = params['*'];
+    const { html } = body;
 
     if (!html) {
-      return res.status(404).json({ error: 'Page not found' });
+      set.status = 400;
+      return { error: 'HTML content is required' };
     }
 
-    res.json({ html });
-  } catch (error) {
-    console.error('Get page error:', error);
-    res.status(500).json({ error: 'Failed to get page' });
-  }
-});
+    try {
+      await savePage(pagePath, html);
+      return { success: true };
+    } catch (error) {
+      console.error('Save page error:', error);
+      set.status = 500;
+      return { error: 'Failed to save page' };
+    }
+  })
 
-/**
- * PUT /api/pages/:pagePath - Save/update a page
- */
-router.put('/pages/*', async (req, res) => {
-  const pagePath = req.params[0];
-  const { html } = req.body;
+  /**
+   * DELETE /api/pages/* - Delete a page
+   */
+  .delete('/pages/*', async ({ params, set }) => {
+    const pagePath = params['*'];
 
-  if (!html) {
-    return res.status(400).json({ error: 'HTML content is required' });
-  }
+    try {
+      await deletePage(pagePath);
+      return { success: true };
+    } catch (error) {
+      console.error('Delete page error:', error);
+      set.status = 500;
+      return { error: 'Failed to delete page' };
+    }
+  });
 
-  try {
-    await savePage(pagePath, html);
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Save page error:', error);
-    res.status(500).json({ error: 'Failed to save page' });
-  }
-});
-
-/**
- * DELETE /api/pages/:pagePath - Delete a page
- */
-router.delete('/pages/*', async (req, res) => {
-  const pagePath = req.params[0];
-
-  try {
-    await deletePage(pagePath);
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Delete page error:', error);
-    res.status(500).json({ error: 'Failed to delete page' });
-  }
-});
-
-export default router;
+export default apiRoutes;

@@ -12,10 +12,12 @@ Capuzzella is a website builder where:
 
 ## Getting Started
 
+**Requirement**: [Bun Runtime](https://bun.com/)
+
 ### 1. Install Dependencies
 
 ```bash
-npm install
+bun install
 ```
 
 ### 2. Configure Environment
@@ -35,9 +37,7 @@ Edit `.env` and set:
 Generate a secure SESSION_SECRET:
 
 ```bash
-npm run generate:secret
-# or
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+bun run generate:secret
 ```
 
 Copy the output and paste it as the `SESSION_SECRET` value in your `.env` file.
@@ -46,10 +46,10 @@ Copy the output and paste it as the `SESSION_SECRET` value in your `.env` file.
 
 ```bash
 # Development mode (with auto-reload)
-npm run dev
+bun run dev
 
 # Production mode
-npm start
+bun run start
 ```
 
 The server will start at http://localhost:3000
@@ -63,7 +63,7 @@ On first run, a default admin user is created automatically:
 To create additional users, use the create-user script:
 
 ```bash
-node scripts/create-user.js username password
+bun run scripts/create-user.js username password
 ```
 
 ## Usage
@@ -89,7 +89,7 @@ node scripts/create-user.js username password
 ```
 capuzzella/
 ├── src/
-│   ├── server.js              # Express app entry
+│   └── server.js              # Bun server entry
 ├── drafts/                    # Working HTML files (editable)
 ├── public/                    # Published HTML files (read-only)
 ├── components/                # Reusable component templates
@@ -118,15 +118,16 @@ capuzzella/
 - `/*.html?edit=true` - Page in Edit Mode with AI Chat  (Auth required)
 - `/*.html?draft=true` - Draft Version of Page without AI Chat (Auth required)
 - `/settings` - User Settings (Auth required)
-- `/page` - List of all pages (Auth required)
+- `/pages` - List of all pages (Auth required)
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Server | ExpressJS (ES Modules) |
-| Database | SQLite (better-sqlite3) |
-| Auth | express-session + bcrypt |
+| Runtime | Bun |
+| Server | Bun.serve() (native HTTP) |
+| Database | SQLite (bun:sqlite) |
+| Auth | Custom session + Bun.password |
 | AI | OpenAI / Anthropic (configurable) |
 | Styling | Tailwind CSS |
 | Editor UI | Vanilla JS |
