@@ -163,6 +163,31 @@ Railway supports persistent volumes. To ensure your database and draft files per
 2. Click "Add Volume"
 3. Mount it at `/app/data` for the SQLite database
 
+## Run with Docker Compose
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) installed on your system
+
+### Quick Start
+
+1. **Configure environment**: Copy and edit the `.env` file (see [Configure Environment](#2-configure-environment))
+
+2. **Build and start the container**:
+   ```bash
+   docker compose up --build -d
+   ```
+
+3. **View logs** (to get the initial admin password):
+   ```bash
+   docker compose logs -f
+   ```
+
+4. **Stop the container**:
+   ```bash
+   docker compose down
+   ```
+
 ## License
 
 ISC

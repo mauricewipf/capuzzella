@@ -1,0 +1,14 @@
+services:
+  capuzzella:
+    build:
+      context: .
+      dockerfile: container/Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./public:/app/public
+      - ./drafts:/app/drafts
+    restart: unless-stopped
