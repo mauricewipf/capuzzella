@@ -112,6 +112,7 @@ export const pagesRoutes = new Elysia({ prefix: '/pages' })
             <div class="flex justify-between items-center mb-8">
               <h1 class="text-3xl font-bold text-gray-900">Pages</h1>
               <div class="flex gap-4">
+                <a href="/design-system" class="text-gray-600 hover:text-gray-800">Design System</a>
                 <a href="/settings" class="text-gray-600 hover:text-gray-800">Settings</a>
                 <a href="/auth/logout" class="text-red-600 hover:text-red-800">Sign out</a>
               </div>
