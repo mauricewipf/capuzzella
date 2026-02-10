@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { Elysia } from 'elysia';
 import fs from 'fs/promises';
 import path from 'path';
@@ -11,6 +12,56 @@ const __dirname = path.dirname(__filename);
 
 const DRAFTS_DIR = path.join(__dirname, '../../drafts');
 const PUBLIC_DIR = path.join(__dirname, '../../public');
+const DRAFTS_CSS_DIR = path.join(DRAFTS_DIR, 'assets', 'css');
+const PUBLIC_CSS_DIR = path.join(PUBLIC_DIR, 'assets', 'css');
+
+/**
+ * Publish drafts/assets/css/ to public: copy each file with MD5 fingerprint,
+ * write main.css with updated @import paths (main.css itself is not fingerprinted).
+ */
+async function publishCssAssets() {
+  await fs.mkdir(PUBLIC_CSS_DIR, { recursive: true });
+
+  const mainPath = path.join(DRAFTS_CSS_DIR, 'main.css');
+  let mainContent;
+  try {
+    mainContent = await fs.readFile(mainPath, 'utf-8');
+  } catch (err) {
+    if (err.code === 'ENOENT') return;
+    throw err;
+  }
+
+  const importRegex = /@import\s+"([^"]+)";/g;
+  const imports = [...mainContent.matchAll(importRegex)].map((m) => m[1]);
+  const fingerprintMap = new Map();
+
+  for (const importPath of imports) {
+    const sourcePath = path.join(DRAFTS_CSS_DIR, importPath);
+    let content;
+    try {
+      content = await fs.readFile(sourcePath, 'utf-8');
+    } catch (err) {
+      if (err.code === 'ENOENT') continue;
+      throw err;
+    }
+    const hash = crypto.createHash('md5').update(content).digest('hex');
+    const ext = path.extname(importPath);
+    const base = importPath.slice(0, -ext.length);
+    const fingerprintedName = `${base}.${hash}${ext}`;
+    fingerprintMap.set(importPath, fingerprintedName);
+    await fs.writeFile(path.join(PUBLIC_CSS_DIR, fingerprintedName), content, 'utf-8');
+  }
+
+  let newMainContent = mainContent;
+  for (const [original, fingerprinted] of fingerprintMap) {
+    newMainContent = newMainContent.replace(
+      new RegExp(`@import\\s+"${original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}";`),
+      `@import "${fingerprinted}";`
+    );
+  }
+
+  await fs.writeFile(path.join(PUBLIC_CSS_DIR, 'main.css'), newMainContent, 'utf-8');
+}
 
 /**
  * Publish routes plugin for Elysia
@@ -56,6 +107,13 @@ export const publishRoutes = new Elysia({ prefix: '/publish' })
           console.error(`Failed to publish ${pagePath}:`, error);
           errors.push({ path: pagePath, error: error.message });
         }
+      }
+
+      try {
+        await publishCssAssets();
+      } catch (cssError) {
+        console.error('Failed to publish CSS assets:', cssError);
+        errors.push({ path: 'assets/css', error: cssError.message });
       }
 
       let sitemap;
@@ -148,6 +206,12 @@ export const publishRoutes = new Elysia({ prefix: '/publish' })
 
       await fs.mkdir(path.dirname(destPath), { recursive: true });
       await fs.copyFile(sourcePath, destPath);
+
+      try {
+        await publishCssAssets();
+      } catch (cssError) {
+        console.error('Failed to publish CSS assets:', cssError);
+      }
 
       let sitemap;
       try {
