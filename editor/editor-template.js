@@ -55,6 +55,12 @@ window.CapuzzellaTemplate = {
                   </svg>
                   Settings
                 </a>
+                <a href="/design-system" class="capuzzella-menu-item">
+                  <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" width="20" height="20">
+                    <path fill-rule="evenodd" d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm0 14a6 6 0 1 1 0-12 6 6 0 0 1 0 12Z" clip-rule="evenodd" />
+                  </svg>
+                  Design System
+                </a>
                 <button id="capuzzella-exit-btn" class="capuzzella-menu-item">
                   <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" width="20" height="20">
                     <path fill-rule="evenodd" d="M17 4.25A2.25 2.25 0 0 0 14.75 2h-5.5A2.25 2.25 0 0 0 7 4.25v2a.75.75 0 0 0 1.5 0v-2a.75.75 0 0 1 .75-.75h5.5a.75.75 0 0 1 .75.75v11.5a.75.75 0 0 1-.75.75h-5.5a.75.75 0 0 1-.75-.75v-2a.75.75 0 0 0-1.5 0v2A2.25 2.25 0 0 0 9.25 18h5.5A2.25 2.25 0 0 0 17 15.75V4.25Z" clip-rule="evenodd" />

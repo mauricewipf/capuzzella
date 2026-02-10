@@ -9,6 +9,7 @@ import { handleDraftPreview, handleEditMode } from './routes/preview.js';
 // Import route plugins
 import { apiRoutes } from './routes/api.js';
 import { authRoutes } from './routes/auth.js';
+import { designSystemRoutes } from './routes/design-system.js';
 import { pagesRoutes } from './routes/pages.js';
 import { publishRoutes } from './routes/publish.js';
 import { settingsRoutes } from './routes/settings.js';
@@ -20,6 +21,7 @@ const PORT = process.env.PORT || 3000;
 
 // Static file directories
 const PUBLIC_DIR = path.join(__dirname, '../public');
+const DRAFTS_DIR = path.join(__dirname, '../drafts');
 const EDITOR_DIR = path.join(__dirname, '../editor');
 const VENDOR_DIR = path.join(__dirname, '../node_modules/@tailwindplus/elements/dist');
 
@@ -86,6 +88,14 @@ async function tryServeStatic(reqPath) {
     return await serveStaticFile(filepath);
   }
 
+  // Serve draft assets (e.g. /assets/css/main.css or /about/assets/css/main.css from drafts/assets/)
+  const assetsMatch = reqPath.match(/\/assets\/(.+)$/);
+  if (assetsMatch) {
+    const draftAssetPath = path.join(DRAFTS_DIR, 'assets', assetsMatch[1]);
+    const response = await serveStaticFile(draftAssetPath);
+    if (response) return response;
+  }
+
   // Serve static files from public directory
   let staticPath = reqPath;
 
@@ -125,6 +135,7 @@ const app = new Elysia()
   .use(pagesRoutes)
   .use(publishRoutes)
   .use(settingsRoutes)
+  .use(designSystemRoutes)
 
   // Handle all other requests (preview modes and static files)
   .all('*', async ({ path: reqPath, query, session, set, request }) => {
