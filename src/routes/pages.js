@@ -89,13 +89,7 @@ export const pagesRoutes = new Elysia({ prefix: '/pages' })
         })
       );
 
-      pagesWithStatus.sort((a, b) => {
-        if (a.hasUnpublishedChanges && !b.hasUnpublishedChanges) return -1;
-        if (!a.hasUnpublishedChanges && b.hasUnpublishedChanges) return 1;
-        if (!a.isPublished && b.isPublished) return -1;
-        if (a.isPublished && !b.isPublished) return 1;
-        return a.path.localeCompare(b.path);
-      });
+      pagesWithStatus.sort((a, b) => a.path.localeCompare(b.path));
 
       set.headers['Content-Type'] = 'text/html';
       return `
