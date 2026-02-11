@@ -5,189 +5,182 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Welcome - My Website</title>
-  <link rel="stylesheet" href="assets/css/main.css">
   <link rel="stylesheet" href="assets/css/bootstrap.min.css">
   <script src="assets/js/bootstrap.bundle.min.js"></script>
 </head>
 
-<body class="bg-white">
+<body>
   <!-- Hero Section -->
-  <section class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-      <div class="text-center">
-        <h1 class="text-4xl md:text-6xl font-bold mb-6">
-          A Website Builder like it's 2026!
-        </h1>
-        <p class="text-xl md:text-2xl text-indigo-100 mb-8 max-w-3xl mx-auto">
-          AI-assisted editing, zero config, instant publish
-        </p>
-        <div class="flex justify-center gap-4">
-          <a href="https://github.com/mauricewipf/capuzzella"
-            class="bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold hover:bg-indigo-50 transition-colors">
-            View on GitHub
-          </a>
-          <a href="https://railway.app/template?template=https://github.com/mauricewipf/capuzzella"
-            class="bg-gray-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors">
-            Deploy on Railway
-          </a>
+  <section class="hero-section text-white py-5 bg-primary">
+    <div class="container py-5">
+      <div class="row justify-content-center text-center">
+        <div class="col-lg-8">
+          <h1 class="display-3 fw-bold mb-4">
+            A Website Builder like it's 2026!
+          </h1>
+          <p class="lead mb-4 opacity-75">
+            AI-assisted editing, zero config, instant publish
+          </p>
+          <div class="d-flex justify-content-center gap-3">
+            <a href="https://github.com/mauricewipf/capuzzella" class="btn btn-light btn-lg fw-semibold px-4">
+              View on GitHub
+            </a>
+            <a href="https://railway.app/template?template=https://github.com/mauricewipf/capuzzella"
+              class="btn btn-dark btn-lg fw-semibold px-4">
+              Deploy on Railway
+            </a>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Features Section -->
-  <section id="features" class="py-20 bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Features
-        </h2>
-        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+  <section id="features" class="py-5 bg-body-secondary">
+    <div class="container py-4">
+      <div class="text-center mb-5">
+        <h2 class="display-5 fw-bold mb-3">Features</h2>
+        <p class="lead text-body-secondary col-lg-7 mx-auto">
           Discover what makes our product special.
         </p>
       </div>
 
-      <div class="grid md:grid-cols-3 gap-8">
-        <div class="text-center p-6">
-          <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
+      <div class="row g-4">
+        <div class="col-md-4 text-center">
+          <div class="p-4">
+            <div class="bg-primary-subtle rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+              style="width: 64px; height: 64px;">
+              <svg class="text-primary" width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+            </div>
+            <h3 class="h5 fw-semibold mb-2">AI-assisted editing</h3>
+            <p class="text-body-secondary">Let AI help you create and edit content with natural language prompts.</p>
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">AI-assisted editing</h3>
-          <p class="text-gray-600">Let AI help you create and edit content with natural language prompts.</p>
         </div>
 
-        <div class="text-center p-6">
-          <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-            </svg>
+        <div class="col-md-4 text-center">
+          <div class="p-4">
+            <div class="bg-primary-subtle rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+              style="width: 64px; height: 64px;">
+              <svg class="text-primary" width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+            </div>
+            <h3 class="h5 fw-semibold mb-2">Bring your own API Key</h3>
+            <p class="text-body-secondary">Use your own API key for full control over costs and usage.</p>
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">Bring your own API Key</h3>
-          <p class="text-gray-600">Use your own API key for full control over costs and usage.</p>
         </div>
 
-        <div class="text-center p-6">
-          <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+        <div class="col-md-4 text-center">
+          <div class="p-4">
+            <div class="bg-primary-subtle rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+              style="width: 64px; height: 64px;">
+              <svg class="text-primary" width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <h3 class="h5 fw-semibold mb-2">Sitemap generation</h3>
+            <p class="text-body-secondary">Automatically generate sitemaps to improve SEO and discoverability.</p>
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">Sitemap generation</h3>
-          <p class="text-gray-600">Automatically generate sitemaps to improve SEO and discoverability.</p>
         </div>
       </div>
     </div>
   </section>
 
   <!-- How It Works Section -->
-  <section class="py-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          How It Works
-        </h2>
-        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+  <section class="py-5">
+    <div class="container py-4">
+      <div class="text-center mb-5">
+        <h2 class="display-5 fw-bold mb-3">How It Works</h2>
+        <p class="lead text-body-secondary col-lg-7 mx-auto">
           Edit your pages with AI, preview changes, and publish instantly.
         </p>
       </div>
 
-      <div class="space-y-16">
-        <!-- Edit Mode -->
-        <div class="grid md:grid-cols-2 gap-8 items-center">
-          <div class="order-2 md:order-1">
-            <h3 class="text-2xl font-bold text-gray-900 mb-4">Edit with AI</h3>
-            <p class="text-gray-600 mb-4">
-              Add <code class="bg-gray-200 px-2 py-1 rounded text-indigo-600">?edit=true</code> to any page URL to open
-              the editor panel. Simply describe what changes you want to make in natural language, and the AI will
-              update your page accordingly.
-            </p>
-            <p class="text-gray-600">
-              No coding required — just tell the AI what you want, click "Build page", and watch your changes appear
-              instantly.
-            </p>
-          </div>
-          <div class="order-1 md:order-2">
-            <img src="/images/capuzzella-edit.png" alt="Edit mode with AI editor panel">
-          </div>
+      <!-- Edit Mode -->
+      <div class="row align-items-center g-5 mb-5">
+        <div class="col-md-6 order-2 order-md-1">
+          <h3 class="h3 fw-bold mb-3">Edit with AI</h3>
+          <p class="text-body-secondary mb-3">
+            Add <code class="bg-body-secondary px-2 py-1 rounded text-primary">?edit=true</code> to any page URL to
+            open the editor panel. Simply describe what changes you want to make in natural language, and the AI will
+            update your page accordingly.
+          </p>
+          <p class="text-body-secondary">
+            No coding required — just tell the AI what you want, click "Build page", and watch your changes appear
+            instantly.
+          </p>
         </div>
+        <div class="col-md-6 order-1 order-md-2">
+          <img src="/images/capuzzella-edit.png" alt="Edit mode with AI editor panel" class="img-fluid">
+        </div>
+      </div>
 
-        <!-- Draft Preview -->
-        <div class="grid md:grid-cols-2 gap-8 items-center">
-          <div>
-            <img src="/images/capuzzella-draft.png" alt="Draft preview mode">
-          </div>
-          <div>
-            <h3 class="text-2xl font-bold text-gray-900 mb-4">Preview Your Changes</h3>
-            <p class="text-gray-600 mb-4">
-              Use <code class="bg-gray-200 px-2 py-1 rounded text-indigo-600">?draft=true</code> to preview your
-              unpublished changes without the editor panel. See exactly how your page will look before publishing.
-            </p>
-            <p class="text-gray-600">
-              When you're happy with the result, publish your changes with a single click.
-            </p>
-          </div>
+      <!-- Draft Preview -->
+      <div class="row align-items-center g-5">
+        <div class="col-md-6">
+          <img src="/images/capuzzella-draft.png" alt="Draft preview mode" class="img-fluid">
+        </div>
+        <div class="col-md-6">
+          <h3 class="h3 fw-bold mb-3">Preview Your Changes</h3>
+          <p class="text-body-secondary mb-3">
+            Use <code class="bg-body-secondary px-2 py-1 rounded text-primary">?draft=true</code> to preview your
+            unpublished changes without the editor panel. See exactly how your page will look before publishing.
+          </p>
+          <p class="text-body-secondary">
+            When you're happy with the result, publish your changes with a single click.
+          </p>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Contact Section -->
-  <section id="contact" class="bg-gray-50 py-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Get in Touch
-        </h2>
-        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+  <section id="contact" class="py-5 bg-body-secondary">
+    <div class="container py-4">
+      <div class="text-center mb-5">
+        <h2 class="display-5 fw-bold mb-3">Get in Touch</h2>
+        <p class="lead text-body-secondary col-lg-7 mx-auto">
           Have questions? We'd love to hear from you.
         </p>
       </div>
 
-      <div class="grid md:grid-cols-2 gap-8">
-        <div class="max-w-xl mx-auto">
-          <form class="space-y-6">
-            <div>
-              <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-              <input type="text" id="name" name="name"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+      <div class="row g-4">
+        <div class="col-md-6">
+          <form>
+            <div class="mb-3">
+              <label for="name" class="form-label">Name</label>
+              <input type="text" id="name" name="name" class="form-control">
             </div>
-            <div>
-              <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input type="email" id="email" name="email"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <input type="email" id="email" name="email" class="form-control">
             </div>
-            <div>
-              <label for="message" class="block text-sm font-medium text-gray-700 mb-1">Message</label>
-              <textarea id="message" name="message" rows="4"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"></textarea>
+            <div class="mb-3">
+              <label for="message" class="form-label">Message</label>
+              <textarea id="message" name="message" rows="4" class="form-control"></textarea>
             </div>
-            <button type="submit"
-              class="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition-colors">
+            <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold">
               Send Message
             </button>
           </form>
         </div>
 
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-          <!-- Card Image -->
-          <div class="h-48 bg-cover bg-center"
-            style="background-image: url('https://images.unsplash.com/photo-1473448912268-2022ce9509d8');">
-          </div>
-
-          <!-- Card Content -->
-          <div class="p-6">
-            <h3 class="text-xl font-bold text-gray-900 mb-2">
-              Contact Information
-            </h3>
-            <p class="text-gray-600 mb-4">
-              X: @mauwi<br>
-              Github: github.com/mauricewipf<br>
-            </p>
+        <div class="col-md-6">
+          <div class="card shadow h-100">
+            <img src="https://images.unsplash.com/photo-1473448912268-2022ce9509d8" class="card-img-top"
+              style="height: 200px; object-fit: cover;" alt="Contact">
+            <div class="card-body">
+              <h3 class="card-title h5 fw-bold mb-2">Contact Information</h3>
+              <p class="card-text text-body-secondary">
+                X: @mauwi<br>
+                Github: github.com/mauricewipf<br>
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -195,9 +188,9 @@
   </section>
 
   <!-- Footer -->
-  <footer class="bg-gray-900 text-white py-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-      <p class="text-gray-400">
+  <footer class="bg-dark text-white py-4">
+    <div class="container text-center">
+      <p class="text-secondary mb-0">
         Capuzzella CMS
       </p>
     </div>
