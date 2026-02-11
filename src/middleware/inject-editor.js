@@ -14,61 +14,22 @@ export function injectEditor(html, pagePath) {
 
   // Create a complete editor shell page with iframe
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edit: ${pagePath}</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    html, body {
-      height: 100%;
-      overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
-    
-    .capuzzella-layout {
-      display: flex;
-      height: 100vh;
-      width: 100vw;
-    }
-    
-    #capuzzella-iframe {
-      flex: 1;
-      border: none;
-      height: 100%;
-      background: white;
-    }
-    
-    #capuzzella-editor {
-      width: 400px;
-      height: 100vh;
-      background: #1f2937;
-      border-left: 1px solid #374151;
-      display: flex;
-      flex-direction: column;
-      flex-shrink: 0;
-    }
-    
-    #capuzzella-editor * {
-      box-sizing: border-box;
-    }
-  </style>
-  <link rel="stylesheet" href="/editor/editor.css">
+  <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-  <div class="capuzzella-layout">
-    <iframe id="capuzzella-iframe" srcdoc="${escapedHtml}"></iframe>
-    <div id="capuzzella-editor" data-page-path="${pagePath}">
+<body class="h-100 overflow-hidden">
+  <div class="d-flex vh-100 vw-100">
+    <iframe id="capuzzella-iframe" class="flex-grow-1 border-0 h-100 min-vw-0" srcdoc="${escapedHtml}"></iframe>
+    <div id="capuzzella-editor" class="d-flex flex-column flex-shrink-0 h-100 bg-dark border-start border-secondary overflow-hidden" style="width: 400px;" data-page-path="${pagePath}">
       <!-- Editor UI will be initialized by editor.js -->
     </div>
   </div>
   
+  <script src="/assets/js/bootstrap.bundle.min.js"></script>
   <script src="/editor/editor-template.js?v=${Date.now()}" defer></script>
   <script src="/editor/editor.js?v=${Date.now()}" defer></script>
 </body>

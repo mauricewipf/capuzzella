@@ -42,7 +42,7 @@
         // Restore each message to the UI
         savedMessages.forEach(msg => {
           const messageEl = document.createElement('div');
-          messageEl.className = `capuzzella-message capuzzella-message-${msg.type}`;
+          messageEl.className = getMessageClasses(msg.type);
           messageEl.textContent = msg.content;
           messagesContainer.appendChild(messageEl);
           messages.push(msg);
@@ -130,8 +130,6 @@
     const unpublishBtn = document.getElementById('capuzzella-unpublish-btn');
     const refreshBtn = document.getElementById('capuzzella-refresh-btn');
     const exitBtn = document.getElementById('capuzzella-exit-btn');
-    const optionsBtn = document.getElementById('capuzzella-options-btn');
-    const dropdownMenu = document.getElementById('capuzzella-dropdown-menu');
 
     input.addEventListener('keydown', handleKeyDown);
     input.addEventListener('input', autoResize);
@@ -143,26 +141,6 @@
     unpublishBtn.addEventListener('click', unpublishPage);
     refreshBtn.addEventListener('click', refreshPageContent);
     exitBtn.addEventListener('click', exitEditMode);
-
-    // Dropdown toggle
-    optionsBtn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      dropdownMenu.classList.toggle('open');
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function (e) {
-      if (!dropdownMenu.contains(e.target) && e.target !== optionsBtn) {
-        dropdownMenu.classList.remove('open');
-      }
-    });
-
-    // Close dropdown when clicking menu items (except links which navigate away)
-    dropdownMenu.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', function () {
-        dropdownMenu.classList.remove('open');
-      });
-    });
 
     // Restore any saved chat messages from previous session
     restoreMessages();
@@ -196,7 +174,7 @@
       // Show error state in status
       const statusEl = document.getElementById('capuzzella-publish-status');
       if (statusEl) {
-        statusEl.innerHTML = '<span class="capuzzella-status-badge capuzzella-status-error">Status unavailable</span>';
+        statusEl.innerHTML = '<span class="badge text-bg-danger">Status unavailable</span>';
       }
     }
   }
@@ -217,34 +195,19 @@
     if (publishStatus.isPublished) {
       if (publishStatus.hasUnpublishedChanges) {
         // Has unpublished changes - show Publish button
-        statusHtml = `
-          <span class="capuzzella-status-badge capuzzella-status-modified">
-            <span class="capuzzella-status-dot"></span>
-            Unpublished changes
-          </span>
-        `;
+        statusHtml = '<span class="badge text-bg-warning">Unpublished changes</span>';
         if (publishText) publishText.textContent = 'Publish Changes';
         publishBtn.style.display = 'flex';
         unpublishBtn.style.display = 'none';
       } else {
         // Published and up to date - show Unpublish button
-        statusHtml = `
-          <span class="capuzzella-status-badge capuzzella-status-published">
-            <span class="capuzzella-status-dot"></span>
-            Published
-          </span>
-        `;
+        statusHtml = '<span class="badge text-bg-success">Published</span>';
         publishBtn.style.display = 'none';
         unpublishBtn.style.display = 'flex';
       }
     } else {
       // Draft - show Publish button
-      statusHtml = `
-        <span class="capuzzella-status-badge capuzzella-status-draft">
-          <span class="capuzzella-status-dot"></span>
-          Draft
-        </span>
-      `;
+      statusHtml = '<span class="badge text-bg-secondary">Draft</span>';
       if (publishText) publishText.textContent = 'Publish';
       publishBtn.style.display = 'flex';
       unpublishBtn.style.display = 'none';
@@ -274,11 +237,13 @@
     const newHeight = Math.min(textarea.scrollHeight, 200);
     textarea.style.height = newHeight + 'px';
 
-    // Show scrollbar only when content exceeds max height
+    // Toggle scrollbar when content exceeds max height
     if (textarea.scrollHeight > 200) {
-      textarea.classList.add('has-overflow');
+      textarea.classList.remove('overflow-hidden');
+      textarea.classList.add('overflow-auto');
     } else {
-      textarea.classList.remove('has-overflow');
+      textarea.classList.remove('overflow-auto');
+      textarea.classList.add('overflow-hidden');
     }
   }
 
@@ -341,8 +306,8 @@
         // Create a clickable link to navigate to the new page
         const messagesContainer = document.getElementById('capuzzella-messages');
         const linkEl = document.createElement('div');
-        linkEl.className = 'capuzzella-message capuzzella-message-system';
-        linkEl.innerHTML = `<a href="/${data.newPagePath}?edit=true" class="capuzzella-new-page-link">Open new page →</a>`;
+        linkEl.className = getMessageClasses('system');
+        linkEl.innerHTML = `<a href="/${data.newPagePath}?edit=true" class="btn btn-sm btn-outline-primary">Open new page &rarr;</a>`;
         messagesContainer.appendChild(linkEl);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
@@ -363,13 +328,30 @@
   }
 
   /**
+   * Get Bootstrap-based CSS classes for a message type
+   */
+  function getMessageClasses(type) {
+    const base = 'p-2 rounded small mb-1';
+    switch (type) {
+      case 'user':
+        return `${base} bg-primary text-white align-self-end`;
+      case 'assistant':
+        return `${base} bg-secondary text-light align-self-start`;
+      case 'system':
+        return `${base} text-secondary text-center align-self-center`;
+      default:
+        return base;
+    }
+  }
+
+  /**
    * Add a message to the chat UI
    */
   function addMessage(type, content) {
     const messagesContainer = document.getElementById('capuzzella-messages');
 
     const messageEl = document.createElement('div');
-    messageEl.className = `capuzzella-message capuzzella-message-${type}`;
+    messageEl.className = getMessageClasses(type);
     messageEl.textContent = content;
 
     messagesContainer.appendChild(messageEl);
@@ -398,13 +380,9 @@
     if (loading) {
       const loaderEl = document.createElement('div');
       loaderEl.id = 'capuzzella-loader';
-      loaderEl.className = 'capuzzella-loading';
+      loaderEl.className = 'd-flex align-items-center gap-2 p-2 text-secondary small';
       loaderEl.innerHTML = `
-        <div class="capuzzella-loading-dots">
-          <div class="capuzzella-loading-dot"></div>
-          <div class="capuzzella-loading-dot"></div>
-          <div class="capuzzella-loading-dot"></div>
-        </div>
+        <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
         <span>Thinking...</span>
       `;
       messagesContainer.appendChild(loaderEl);
