@@ -165,9 +165,10 @@ Pages use Bootstrap 5.3 for styling. When editing or creating pages:
 
 ## Assets
 
-Pages include Bootstrap CSS and JS via local asset paths:
+Pages include Bootstrap CSS, a theme override, and Bootstrap JS via local asset paths:
 - CSS: \`<link rel="stylesheet" href="assets/css/bootstrap.min.css">\`
-- JS: \`<script src="assets/js/bootstrap.bundle.min.js"></script>\`
+- Theme: \`<link rel="stylesheet" href="assets/css/theme.css">\`
+- JS: \`<script src="assets/js/bootstrap.bundle.min.js" defer></script>\`
 
 ## Guidelines
 
@@ -184,6 +185,7 @@ Pages include Bootstrap CSS and JS via local asset paths:
 When creating new pages:
 - Use descriptive paths (e.g., "about.html", "services/consulting.html", "blog/my-first-post.html")
 - Include all necessary HTML structure (DOCTYPE, html, head with title, Bootstrap CSS link, body, Bootstrap JS script)
+- Include theme.css link after bootstrap.min.css in the head
 - Match the styling of existing pages when possible
 - Use Bootstrap components and utilities for all layout and styling
 `.trim();
