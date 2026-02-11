@@ -12,14 +12,12 @@
   "keywords": [
     "website-builder",
     "ai",
-    "bun",
-    "tailwind"
+    "bun"
   ],
   "author": "Maurice Wipf",
   "license": "ISC",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.33.1",
-    "@tailwindplus/elements": "^1.0.22",
     "bootstrap": "v5.3.8",
     "elysia": "^1.4.22",
     "openai": "^4.104.0"

@@ -24,7 +24,6 @@ const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, '../public');
 const DRAFTS_DIR = path.join(__dirname, '../drafts');
 const EDITOR_DIR = path.join(__dirname, '../editor');
-const VENDOR_DIR = path.join(__dirname, '../node_modules/@tailwindplus/elements/dist');
 
 // Initialize database and session table
 getDb();
@@ -118,12 +117,6 @@ async function tryServeStatic(reqPath, request) {
   // Serve editor assets from /editor/*
   if (reqPath.startsWith('/editor/')) {
     const filepath = path.join(EDITOR_DIR, reqPath.slice(8));
-    return await serveStaticFile(filepath);
-  }
-
-  // Serve vendor assets from /vendor/tailwindplus-elements/*
-  if (reqPath.startsWith('/vendor/tailwindplus-elements/')) {
-    const filepath = path.join(VENDOR_DIR, reqPath.slice(30));
     return await serveStaticFile(filepath);
   }
 

@@ -48,58 +48,59 @@ export const settingsRoutes = new Elysia({ prefix: '/settings' })
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Settings - Capuzzella</title>
-        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+        <script src="/assets/js/bootstrap.bundle.min.js"></script>
       </head>
-      <body class="bg-gray-100 min-h-screen">
-        <div class="max-w-2xl mx-auto py-12 px-4">
-          <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">Settings</h1>
-            <a href="/auth/logout" class="text-red-600 hover:text-red-800">Sign out</a>
+      <body class="bg-body-tertiary">
+        <div class="container py-5" style="max-width: 900px;">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">Settings</h1>
+            <nav class="d-flex gap-3">
+              <a href="/pages" class="text-secondary text-decoration-none">Pages</a>
+              <a href="/design-system" class="text-secondary text-decoration-none">Design System</a>
+              <a href="/auth/logout" class="text-danger text-decoration-none">Sign out</a>
+            </nav>
           </div>
 
           ${message ? `
-            <div class="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+            <div class="alert alert-success" role="alert">
               ${escapeHtml(message)}
             </div>
           ` : ''}
 
           ${error ? `
-            <div class="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            <div class="alert alert-danger" role="alert">
               ${escapeHtml(error)}
             </div>
           ` : ''}
 
-          <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-4">Account Information</h2>
-            <div class="text-gray-600">
-              <p><span class="font-medium">Username:</span> ${escapeHtml(session.username)}</p>
+          <div class="card mb-4">
+            <div class="card-body">
+              <h2 class="h5 card-title mb-3">Account Information</h2>
+              <p class="text-body-secondary mb-0"><span class="fw-medium">Username:</span> ${escapeHtml(session.username)}</p>
             </div>
           </div>
 
-          <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-4">Change Password</h2>
-            <form method="POST" action="/settings/password" class="space-y-4">
-              <div>
-                <label for="currentPassword" class="block text-sm font-medium text-gray-700">Current Password</label>
-                <input type="password" name="currentPassword" id="currentPassword" required
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-              </div>
-              <div>
-                <label for="newPassword" class="block text-sm font-medium text-gray-700">New Password</label>
-                <input type="password" name="newPassword" id="newPassword" required minlength="6"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                <p class="mt-1 text-sm text-gray-500">Minimum 6 characters</p>
-              </div>
-              <div>
-                <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm New Password</label>
-                <input type="password" name="confirmPassword" id="confirmPassword" required minlength="6"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-              </div>
-              <button type="submit"
-                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                Update Password
-              </button>
-            </form>
+          <div class="card">
+            <div class="card-body">
+              <h2 class="h5 card-title mb-3">Change Password</h2>
+              <form method="POST" action="/settings/password">
+                <div class="mb-3">
+                  <label for="currentPassword" class="form-label">Current Password</label>
+                  <input type="password" name="currentPassword" id="currentPassword" required class="form-control">
+                </div>
+                <div class="mb-3">
+                  <label for="newPassword" class="form-label">New Password</label>
+                  <input type="password" name="newPassword" id="newPassword" required minlength="6" class="form-control">
+                  <div class="form-text">Minimum 6 characters</div>
+                </div>
+                <div class="mb-3">
+                  <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                  <input type="password" name="confirmPassword" id="confirmPassword" required minlength="6" class="form-control">
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Update Password</button>
+              </form>
+            </div>
           </div>
         </div>
       </body>

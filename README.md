@@ -129,7 +129,7 @@ capuzzella/
 | Database | SQLite (bun:sqlite) |
 | Auth | Custom session + Bun.password |
 | AI | OpenAI / Anthropic (configurable) |
-| Styling | Tailwind CSS |
+| Styling | Bootstrap |
 | Editor UI | Vanilla JS |
 
 ## Deploy on Railway

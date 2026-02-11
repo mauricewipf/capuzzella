@@ -1,6 +1,6 @@
-import { processWithOpenAI } from './openai.js';
 import { processWithAnthropic } from './anthropic.js';
-import { loadComponents, buildSystemPrompt } from './prompts.js';
+import { processWithOpenAI } from './openai.js';
+import { buildSystemPrompt } from './prompts.js';
 
 /**
  * @typedef {Object} ChatResult
@@ -20,24 +20,21 @@ import { loadComponents, buildSystemPrompt } from './prompts.js';
  */
 export async function processChat(message, currentHtml, pagePath) {
   const provider = process.env.AI_PROVIDER || 'openai';
-  
-  // Load available components for context
-  const components = await loadComponents();
-  
-  // Build the system prompt with component library
-  const systemPrompt = buildSystemPrompt(components);
-  
+
+  // Build the system prompt
+  const systemPrompt = buildSystemPrompt();
+
   // Build the user message with current HTML context
   const userMessage = buildUserMessage(message, currentHtml, pagePath);
-  
+
   let result;
-  
+
   if (provider === 'anthropic') {
     result = await processWithAnthropic(systemPrompt, userMessage);
   } else {
     result = await processWithOpenAI(systemPrompt, userMessage);
   }
-  
+
   return result;
 }
 
@@ -50,7 +47,7 @@ export async function processChat(message, currentHtml, pagePath) {
  * @returns {string}
  */
 function buildUserMessage(message, currentHtml, pagePath) {
-  const htmlContext = currentHtml 
+  const htmlContext = currentHtml
     ? `Current HTML:
 \`\`\`html
 ${currentHtml}

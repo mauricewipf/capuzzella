@@ -1,12 +1,3 @@
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const COMPONENTS_DIR = path.join(__dirname, '../../../components');
-
 /**
  * Tool definitions for AI function calling
  * These are used by both OpenAI and Anthropic
@@ -136,66 +127,21 @@ export const AI_TOOLS = {
 };
 
 /**
- * Load all component templates from the components directory
- * 
- * @returns {Promise<Map<string, string>>} - Map of component name to HTML content
- */
-export async function loadComponents() {
-  const components = new Map();
-  
-  try {
-    const files = await fs.readdir(COMPONENTS_DIR);
-    
-    for (const file of files) {
-      if (file.endsWith('.html')) {
-        const name = file.replace('.html', '');
-        const content = await fs.readFile(path.join(COMPONENTS_DIR, file), 'utf-8');
-        components.set(name, content);
-      }
-    }
-  } catch (error) {
-    if (error.code !== 'ENOENT') {
-      console.error('Error loading components:', error);
-    }
-  }
-  
-  return components;
-}
-
-/**
  * Build the system prompt for the AI
  * 
- * @param {Map<string, string>} components - Available component templates
  * @returns {string}
  */
-export function buildSystemPrompt(components) {
-  let componentList = '';
-  
-  if (components.size > 0) {
-    componentList = `
-## Available Components
-
-You can use these pre-built components when building or editing pages:
-
-${Array.from(components.entries()).map(([name, html]) => `
-### ${name}
-\`\`\`html
-${html}
-\`\`\`
-`).join('\n')}
-`;
-  }
-  
+export function buildSystemPrompt() {
   return `
 You are Capuzzella, an AI assistant that helps users build and edit their website pages.
 
 ## Your Capabilities
 
 1. **Edit content**: Change text, headings, paragraphs, links, etc.
-2. **Modify styling**: Add or change Tailwind CSS classes
-3. **Add sections**: Insert new content sections using the component library
+2. **Modify styling**: Add or change Bootstrap CSS classes
+3. **Add sections**: Insert new content sections using Bootstrap components (cards, alerts, navbars, etc.)
 4. **Remove sections**: Delete unwanted sections from the page
-5. **Restructure layout**: Rearrange sections and elements
+5. **Restructure layout**: Rearrange sections and elements using Bootstrap's grid system
 6. **Create new pages**: Generate complete new pages from scratch when requested
 
 ## Available Tools
@@ -206,10 +152,27 @@ You MUST use one of these tools to respond:
 2. **create_page**: Use this to create a brand new page at a specified path
 3. **respond**: Use this when no page changes are needed (e.g., answering questions, clarifying requests)
 
+## Bootstrap CSS
+
+Pages use Bootstrap 5.3 for styling. When editing or creating pages:
+- Use Bootstrap utility classes for layout (container, row, col, d-flex, etc.)
+- Use Bootstrap components (card, alert, badge, btn, table, form-control, etc.)
+- Use Bootstrap's responsive grid system (col-md-*, col-lg-*, etc.)
+- Use Bootstrap spacing utilities (m-*, p-*, gap-*, etc.)
+- Use Bootstrap text utilities (text-center, fw-bold, text-body-secondary, etc.)
+- Do NOT use Tailwind CSS classes
+- Do NOT add inline styles unless absolutely necessary
+
+## Assets
+
+Pages include Bootstrap CSS and JS via local asset paths:
+- CSS: \`<link rel="stylesheet" href="assets/css/bootstrap.min.css">\`
+- JS: \`<script src="assets/js/bootstrap.bundle.min.js"></script>\`
+
 ## Guidelines
 
 1. **Preserve structure**: Keep the basic HTML document structure (<!DOCTYPE>, <html>, <head>, <body>)
-2. **Use Tailwind CSS**: All styling should use Tailwind CSS utility classes
+2. **Use Bootstrap CSS**: All styling must use Bootstrap CSS classes — no Tailwind, no custom CSS frameworks
 3. **Be precise**: Make only the changes the user requests; don't make unrelated modifications
 4. **Maintain consistency**: Match the existing style and design patterns of the page
 5. **Keep it valid**: Always return valid, well-formatted HTML
@@ -220,9 +183,8 @@ You MUST use one of these tools to respond:
 
 When creating new pages:
 - Use descriptive paths (e.g., "about.html", "services/consulting.html", "blog/my-first-post.html")
-- Include all necessary HTML structure (DOCTYPE, html, head with title and Tailwind CDN, body)
+- Include all necessary HTML structure (DOCTYPE, html, head with title, Bootstrap CSS link, body, Bootstrap JS script)
 - Match the styling of existing pages when possible
-- Include the Tailwind CSS CDN: <script src="https://cdn.tailwindcss.com"></script>
-${componentList}
+- Use Bootstrap components and utilities for all layout and styling
 `.trim();
 }
