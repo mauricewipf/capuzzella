@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { getDb } from './db/index.js';
 import { initSessionTable, sessionPlugin, startSessionCleanup } from './middleware/session.js';
 import { handleDraftPreview, handleEditMode } from './routes/preview.js';
+import { loadManifest, rewriteAssetPaths } from './services/asset-manifest.js';
 
 // Import route plugins
 import { apiRoutes } from './routes/api.js';
@@ -29,6 +30,9 @@ const VENDOR_DIR = path.join(__dirname, '../node_modules/@tailwindplus/elements/
 getDb();
 initSessionTable();
 startSessionCleanup();
+
+// Load asset manifest (fingerprinted asset paths) into memory
+await loadManifest();
 
 /**
  * Get MIME type for a file based on extension
@@ -58,6 +62,26 @@ function getMimeType(filepath) {
 }
 
 /**
+ * Serve a pre-compressed Brotli (.br) file when available and the client accepts it.
+ * Returns null if no .br file exists or the client doesn't accept Brotli.
+ */
+async function serveStaticFileWithBr(filepath, request) {
+  const acceptEncoding = (request.headers.get('accept-encoding') || '').toLowerCase();
+  if (!acceptEncoding.includes('br')) return null;
+
+  const brFile = Bun.file(filepath + '.br');
+  if (!(await brFile.exists())) return null;
+
+  return new Response(brFile, {
+    headers: {
+      'Content-Type': getMimeType(filepath),
+      'Content-Encoding': 'br',
+      'Vary': 'Accept-Encoding'
+    }
+  });
+}
+
+/**
  * Serve a static file
  */
 async function serveStaticFile(filepath) {
@@ -73,9 +97,24 @@ async function serveStaticFile(filepath) {
 }
 
 /**
+ * Serve an HTML file from public/ with asset paths rewritten via the manifest
+ */
+async function servePublicHtml(filepath) {
+  const file = Bun.file(filepath);
+  if (!(await file.exists())) return null;
+
+  const html = await file.text();
+  const rewritten = rewriteAssetPaths(html);
+
+  return new Response(rewritten, {
+    headers: { 'Content-Type': 'text/html' }
+  });
+}
+
+/**
  * Try to serve static files
  */
-async function tryServeStatic(reqPath) {
+async function tryServeStatic(reqPath, request) {
   // Serve editor assets from /editor/*
   if (reqPath.startsWith('/editor/')) {
     const filepath = path.join(EDITOR_DIR, reqPath.slice(8));
@@ -92,6 +131,9 @@ async function tryServeStatic(reqPath) {
   const assetsMatch = reqPath.match(/\/assets\/(.+)$/);
   if (assetsMatch) {
     const draftAssetPath = path.join(DRAFTS_DIR, 'assets', assetsMatch[1]);
+    const brResponse = await serveStaticFileWithBr(draftAssetPath, request);
+    if (brResponse) return brResponse;
+
     const response = await serveStaticFile(draftAssetPath);
     if (response) return response;
   }
@@ -106,13 +148,20 @@ async function tryServeStatic(reqPath) {
 
   // Try exact path first
   const publicFilePath = path.join(PUBLIC_DIR, staticPath);
-  const response = await serveStaticFile(publicFilePath);
-  if (response) return response;
+  if (publicFilePath.endsWith('.html')) {
+    // HTML from public/ gets asset paths rewritten via the manifest
+    const htmlResponse = await servePublicHtml(publicFilePath);
+    if (htmlResponse) return htmlResponse;
+  } else {
+    const brResponse = await serveStaticFileWithBr(publicFilePath, request);
+    const response = brResponse || (await serveStaticFile(publicFilePath));
+    if (response) return response;
+  }
 
   // Try adding .html extension
   if (!staticPath.endsWith('.html')) {
     const htmlPath = path.join(PUBLIC_DIR, staticPath + '.html');
-    return await serveStaticFile(htmlPath);
+    return await servePublicHtml(htmlPath);
   }
 
   return null;
@@ -148,7 +197,7 @@ const app = new Elysia()
     if (editResult !== null) return editResult;
 
     // Try static files
-    const staticResponse = await tryServeStatic(reqPath);
+    const staticResponse = await tryServeStatic(reqPath, request);
     if (staticResponse) return staticResponse;
 
     // 404 Not Found

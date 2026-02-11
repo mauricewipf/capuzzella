@@ -2,8 +2,10 @@ import crypto from 'crypto';
 import { Elysia } from 'elysia';
 import fs from 'fs/promises';
 import path from 'path';
+import { brotliCompressSync } from 'zlib';
 import { fileURLToPath } from 'url';
 import { requireAuth, requirePasswordChanged } from '../middleware/auth.js';
+import { loadManifest } from '../services/asset-manifest.js';
 import { listPages } from '../services/pages.js';
 import { generateSitemap } from '../services/sitemap.js';
 
@@ -12,55 +14,90 @@ const __dirname = path.dirname(__filename);
 
 const DRAFTS_DIR = path.join(__dirname, '../../drafts');
 const PUBLIC_DIR = path.join(__dirname, '../../public');
-const DRAFTS_CSS_DIR = path.join(DRAFTS_DIR, 'assets', 'css');
-const PUBLIC_CSS_DIR = path.join(PUBLIC_DIR, 'assets', 'css');
+const DRAFTS_ASSETS_DIR = path.join(DRAFTS_DIR, 'assets');
+const PUBLIC_ASSETS_DIR = path.join(PUBLIC_DIR, 'assets');
 
 /**
- * Publish drafts/assets/css/ to public: copy each file with MD5 fingerprint,
- * write main.css with updated @import paths (main.css itself is not fingerprinted).
+ * Recursively list all file paths under dir, relative to dir
  */
-async function publishCssAssets() {
-  await fs.mkdir(PUBLIC_CSS_DIR, { recursive: true });
+async function listFilesRecursive(dir, base = '') {
+  const entries = await fs.readdir(path.join(dir, base), { withFileTypes: true });
+  const files = [];
+  for (const e of entries) {
+    const rel = base ? `${base}/${e.name}` : e.name;
+    if (e.isDirectory()) {
+      files.push(...(await listFilesRecursive(dir, rel)));
+    } else {
+      files.push(rel);
+    }
+  }
+  return files;
+}
 
-  const mainPath = path.join(DRAFTS_CSS_DIR, 'main.css');
-  let mainContent;
+/**
+ * Return fingerprinted filename: insert .<hash> before the last extension.
+ * e.g. "css/bootstrap.min.css" + hash -> "css/bootstrap.min.<hash>.css"
+ */
+function fingerprintedName(relativePath, hash) {
+  const dir = path.dirname(relativePath);
+  const base = path.basename(relativePath);
+  const lastDot = base.lastIndexOf('.');
+  if (lastDot <= 0) return path.join(dir, `${base}.${hash}`);
+  const nameWithoutExt = base.slice(0, lastDot);
+  const ext = base.slice(lastDot);
+  const newBase = `${nameWithoutExt}.${hash}${ext}`;
+  return dir ? path.join(dir, newBase) : newBase;
+}
+
+/**
+ * Publish all drafts/assets/ files to public/assets/ with MD5 fingerprints.
+ * For each file: copy as <name>.<hash>.<ext> and create a Brotli-compressed .br version.
+ * Existing .br files from drafts are skipped (regenerated from the source).
+ */
+async function publishDraftAssets() {
+  let entries;
   try {
-    mainContent = await fs.readFile(mainPath, 'utf-8');
+    entries = await listFilesRecursive(DRAFTS_ASSETS_DIR);
   } catch (err) {
-    if (err.code === 'ENOENT') return;
+    if (err.code === 'ENOENT') return; // no drafts/assets
     throw err;
   }
 
-  const importRegex = /@import\s+"([^"]+)";/g;
-  const imports = [...mainContent.matchAll(importRegex)].map((m) => m[1]);
-  const fingerprintMap = new Map();
+  const hashByBasePath = new Map(); // relative path -> hash
 
-  for (const importPath of imports) {
-    const sourcePath = path.join(DRAFTS_CSS_DIR, importPath);
-    let content;
-    try {
-      content = await fs.readFile(sourcePath, 'utf-8');
-    } catch (err) {
-      if (err.code === 'ENOENT') continue;
-      throw err;
-    }
+  for (const rel of entries) {
+    // Skip existing .br files from drafts — we generate fresh ones below
+    if (rel.endsWith('.br')) continue;
+
+    const fullPath = path.join(DRAFTS_ASSETS_DIR, rel);
+    const content = await fs.readFile(fullPath);
     const hash = crypto.createHash('md5').update(content).digest('hex');
-    const ext = path.extname(importPath);
-    const base = importPath.slice(0, -ext.length);
-    const fingerprintedName = `${base}.${hash}${ext}`;
-    fingerprintMap.set(importPath, fingerprintedName);
-    await fs.writeFile(path.join(PUBLIC_CSS_DIR, fingerprintedName), content, 'utf-8');
+    hashByBasePath.set(rel, hash);
+
+    const outName = fingerprintedName(rel, hash);
+    const outPath = path.join(PUBLIC_ASSETS_DIR, outName);
+    await fs.mkdir(path.dirname(outPath), { recursive: true });
+
+    // Write the fingerprinted file
+    await fs.writeFile(outPath, content);
+
+    // Write a Brotli-compressed version alongside it
+    const compressed = brotliCompressSync(content);
+    await fs.writeFile(outPath + '.br', compressed);
   }
 
-  let newMainContent = mainContent;
-  for (const [original, fingerprinted] of fingerprintMap) {
-    newMainContent = newMainContent.replace(
-      new RegExp(`@import\\s+"${original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}";`),
-      `@import "${fingerprinted}";`
-    );
+  // Write asset manifest mapping original paths to fingerprinted paths
+  const manifest = {};
+  for (const [rel, hash] of hashByBasePath) {
+    manifest[rel] = fingerprintedName(rel, hash);
   }
+  await fs.writeFile(
+    path.join(PUBLIC_ASSETS_DIR, 'manifest.json'),
+    JSON.stringify(manifest, null, 2)
+  );
 
-  await fs.writeFile(path.join(PUBLIC_CSS_DIR, 'main.css'), newMainContent, 'utf-8');
+  // Reload in-memory manifest so the server picks up the new fingerprints
+  await loadManifest();
 }
 
 /**
@@ -110,10 +147,10 @@ export const publishRoutes = new Elysia({ prefix: '/publish' })
       }
 
       try {
-        await publishCssAssets();
-      } catch (cssError) {
-        console.error('Failed to publish CSS assets:', cssError);
-        errors.push({ path: 'assets/css', error: cssError.message });
+        await publishDraftAssets();
+      } catch (assetsError) {
+        console.error('Failed to publish draft assets:', assetsError);
+        errors.push({ path: 'assets', error: assetsError.message });
       }
 
       let sitemap;
@@ -208,9 +245,9 @@ export const publishRoutes = new Elysia({ prefix: '/publish' })
       await fs.copyFile(sourcePath, destPath);
 
       try {
-        await publishCssAssets();
-      } catch (cssError) {
-        console.error('Failed to publish CSS assets:', cssError);
+        await publishDraftAssets();
+      } catch (assetsError) {
+        console.error('Failed to publish draft assets:', assetsError);
       }
 
       let sitemap;
