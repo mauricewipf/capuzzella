@@ -113,25 +113,6 @@ export const pagesRoutes = new Elysia({ prefix: '/pages' })
               </nav>
             </div>
 
-            <div class="card mb-4">
-              <div class="card-body">
-                <div class="row text-center">
-                  <div class="col">
-                    <div class="fs-4 fw-bold">${pagesWithStatus.length}</div>
-                    <small class="text-body-secondary">Total Pages</small>
-                  </div>
-                  <div class="col">
-                    <div class="fs-4 fw-bold text-success">${pagesWithStatus.filter(p => p.isPublished && !p.hasUnpublishedChanges).length}</div>
-                    <small class="text-body-secondary">Published</small>
-                  </div>
-                  <div class="col">
-                    <div class="fs-4 fw-bold text-warning">${pagesWithStatus.filter(p => p.hasUnpublishedChanges || !p.isPublished).length}</div>
-                    <small class="text-body-secondary">Unpublished</small>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <div class="text-end mb-3">
               <h6 class="text-body-secondary mb-1">Status Legend</h6>
               <div class="d-flex flex-column align-items-end gap-1 small">
@@ -148,6 +129,7 @@ export const pagesRoutes = new Elysia({ prefix: '/pages' })
               </div>
             ` : `
               <table class="table table-striped align-middle">
+                <caption>${pagesWithStatus.length} pages &middot; ${pagesWithStatus.filter(p => p.isPublished && !p.hasUnpublishedChanges).length} published &middot; ${pagesWithStatus.filter(p => p.hasUnpublishedChanges || !p.isPublished).length} unpublished</caption>
                 <thead class="table-light">
                   <tr>
                     <th scope="col">Page</th>
