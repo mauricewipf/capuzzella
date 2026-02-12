@@ -14,7 +14,15 @@ export function injectEditor(html, pagePath, csrfToken) {
   const escapedHtml = html
     .replace(/&/g, '&amp;')
     .replace(/"/g, '&quot;');
-  const iframeSandbox = 'allow-scripts allow-same-origin allow-forms';
+  // Keep iframe privileges minimal while preserving preview behavior.
+  // - allow-scripts: run page JS in preview
+  // - allow-same-origin: keep same-origin APIs/session behavior for existing pages
+  // - allow-forms: allow in-preview form submissions
+  const iframeSandbox = [
+    'allow-scripts',
+    'allow-same-origin',
+    'allow-forms'
+  ].join(' ');
 
   // Create a complete editor shell page with iframe
   return `<!DOCTYPE html>
