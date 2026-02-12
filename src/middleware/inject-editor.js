@@ -19,7 +19,7 @@ export function injectEditor(html, pagePath) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edit: ${pagePath}</title>
-  <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/static/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="h-100 overflow-hidden">
   <div class="d-flex vh-100 vw-100">
@@ -29,7 +29,7 @@ export function injectEditor(html, pagePath) {
     </div>
   </div>
   
-  <script src="/assets/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/js/bootstrap.bundle.min.js"></script>
   <script src="/editor/editor-template.js?v=${Date.now()}" defer></script>
   <script src="/editor/editor.js?v=${Date.now()}" defer></script>
 </body>

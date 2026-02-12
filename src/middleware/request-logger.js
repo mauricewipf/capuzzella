@@ -14,7 +14,7 @@ const log = logger.child('http');
  * Check if a path is a static asset request.
  */
 function isAssetPath(path) {
-  return path.startsWith('/assets/') || path.startsWith('/editor/');
+  return path.startsWith('/assets/') || path.startsWith('/static/') || path.startsWith('/editor/');
 }
 
 /**

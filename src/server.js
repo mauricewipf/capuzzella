@@ -29,6 +29,7 @@ const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, '../public');
 const DRAFTS_DIR = path.join(__dirname, '../drafts');
 const EDITOR_DIR = path.join(__dirname, '../editor');
+const STATIC_DIR = path.join(__dirname, '../static');
 
 // Initialize database and session table
 getDb();
@@ -140,6 +141,12 @@ async function tryServeStatic(reqPath, request) {
   // Serve editor assets from /editor/*
   if (reqPath.startsWith('/editor/')) {
     const filepath = path.join(EDITOR_DIR, reqPath.slice(8));
+    return await serveStaticFile(filepath);
+  }
+
+  // Serve admin UI assets from /static/*
+  if (reqPath.startsWith('/static/')) {
+    const filepath = path.join(STATIC_DIR, reqPath.slice(8));
     return await serveStaticFile(filepath);
   }
 
