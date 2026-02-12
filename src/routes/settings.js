@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia';
 import { escapeHtml } from '../lib/escape-html.js';
 import { logger } from '../lib/logger.js';
+import { getCsrfToken, verifyCsrfRequest } from '../middleware/csrf.js';
 import { createSessionCookie, saveSession } from '../middleware/session.js';
 import { updatePassword } from '../services/auth.js';
 
@@ -10,6 +11,7 @@ const log = logger.child('settings');
  * Settings routes plugin for Elysia
  */
 export const settingsRoutes = new Elysia({ prefix: '/settings' })
+  .onBeforeHandle((context) => verifyCsrfRequest(context))
   /**
    * GET /settings - Render settings page
    */
@@ -30,6 +32,7 @@ export const settingsRoutes = new Elysia({ prefix: '/settings' })
 
     const message = query.message;
     const error = query.error;
+    const csrfToken = getCsrfToken(session);
 
     // AI provider configuration status
     const aiProvider = process.env.AI_PROVIDER || 'openai';
@@ -66,7 +69,10 @@ export const settingsRoutes = new Elysia({ prefix: '/settings' })
             <nav class="d-flex gap-3">
               <a href="/pages" class="text-secondary text-decoration-none">Pages</a>
               <a href="/design-system" class="text-secondary text-decoration-none">Design System</a>
-                <form method="POST" action="/auth/logout" style="display:inline"><button type="submit" class="btn btn-outline-secondary btn-sm">Sign out</button></form>
+                <form method="POST" action="/auth/logout" style="display:inline">
+                  <input type="hidden" name="_csrf" value="${csrfToken}">
+                  <button type="submit" class="btn btn-outline-secondary btn-sm">Sign out</button>
+                </form>
             </nav>
           </div>
 
@@ -110,6 +116,7 @@ export const settingsRoutes = new Elysia({ prefix: '/settings' })
             <div class="card-body">
               <h2 class="h5 card-title mb-3">Change Password</h2>
               <form method="POST" action="/settings/password">
+                <input type="hidden" name="_csrf" value="${csrfToken}">
                 <div class="mb-3">
                   <label for="currentPassword" class="form-label">Current Password</label>
                   <input type="password" name="currentPassword" id="currentPassword" required class="form-control">

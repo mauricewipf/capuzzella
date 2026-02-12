@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { escapeHtml } from '../lib/escape-html.js';
 import { logger } from '../lib/logger.js';
 import { requireAuth } from '../middleware/auth.js';
+import { getCsrfToken } from '../middleware/csrf.js';
 import { listPages } from '../services/pages.js';
 
 const log = logger.child('pages');
@@ -69,8 +70,9 @@ export const pagesRoutes = new Elysia({ prefix: '/pages' })
   /**
    * GET /pages - Render pages list
    */
-  .get('/', async ({ set }) => {
+  .get('/', async ({ set, session }) => {
     try {
+      const csrfToken = getCsrfToken(session);
       const pages = await listPages();
 
       const pagesWithStatus = await Promise.all(
@@ -100,7 +102,10 @@ export const pagesRoutes = new Elysia({ prefix: '/pages' })
               <nav class="d-flex gap-3">
                 <a href="/design-system" class="text-secondary text-decoration-none">Design System</a>
                 <a href="/settings" class="text-secondary text-decoration-none">Settings</a>
-                <form method="POST" action="/auth/logout" style="display:inline"><button type="submit" class="btn btn-outline-secondary btn-sm">Sign out</button></form>
+                <form method="POST" action="/auth/logout" style="display:inline">
+                  <input type="hidden" name="_csrf" value="${csrfToken}">
+                  <button type="submit" class="btn btn-outline-secondary btn-sm">Sign out</button>
+                </form>
               </nav>
             </div>
 
@@ -154,9 +159,14 @@ export const pagesRoutes = new Elysia({ prefix: '/pages' })
           </div>
 
           <script>
+            const csrfToken = '${csrfToken}';
+
             async function publishPage(pagePath) {
               try {
-                const response = await fetch('/publish/' + pagePath, { method: 'POST' });
+                const response = await fetch('/publish/' + pagePath, {
+                  method: 'POST',
+                  headers: { 'X-CSRF-Token': csrfToken }
+                });
                 const data = await response.json();
                 if (data.success) {
                   window.location.reload();
@@ -171,7 +181,10 @@ export const pagesRoutes = new Elysia({ prefix: '/pages' })
             async function unpublishPage(pagePath) {
               if (!confirm('Are you sure you want to unpublish this page?')) return;
               try {
-                const response = await fetch('/publish/' + pagePath, { method: 'DELETE' });
+                const response = await fetch('/publish/' + pagePath, {
+                  method: 'DELETE',
+                  headers: { 'X-CSRF-Token': csrfToken }
+                });
                 const data = await response.json();
                 if (data.success) {
                   window.location.reload();

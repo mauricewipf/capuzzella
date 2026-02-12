@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia';
 import { logger } from '../lib/logger.js';
 import { getClientIp } from '../lib/get-client-ip.js';
+import { getCsrfToken, verifyCsrfRequest } from '../middleware/csrf.js';
 import { sendContactEmail } from '../services/email.js';
 
 const log = logger.child('forms');
@@ -64,6 +65,13 @@ function isValidEmail(email) {
  * If an "email" field is present it is validated as an email address.
  */
 export const formRoutes = new Elysia({ prefix: '/api' })
+  .onBeforeHandle((context) => verifyCsrfRequest(context))
+  /**
+   * GET /api/csrf-token - Retrieve CSRF token for client-side API calls
+   */
+  .get('/csrf-token', ({ session }) => {
+    return { csrfToken: getCsrfToken(session) };
+  })
   /**
    * POST /api/contact - Handle contact form submissions
    */

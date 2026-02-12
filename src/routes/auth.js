@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia';
 import { logger } from '../lib/logger.js';
 import { getClientIp } from '../lib/get-client-ip.js';
+import { getCsrfToken, verifyCsrfRequest } from '../middleware/csrf.js';
 import { createClearSessionCookie, createSessionCookie, saveSession, regenerateSession } from '../middleware/session.js';
 import { authenticateUser } from '../services/auth.js';
 
@@ -50,6 +51,7 @@ setInterval(() => {
  * Auth routes plugin for Elysia
  */
 export const authRoutes = new Elysia({ prefix: '/auth' })
+  .onBeforeHandle((context) => verifyCsrfRequest(context))
   /**
    * GET /auth/login - Render login page
    */
@@ -62,6 +64,7 @@ export const authRoutes = new Elysia({ prefix: '/auth' })
     }
 
     set.headers['Content-Type'] = 'text/html';
+    const csrfToken = getCsrfToken(session);
     return `
       <!DOCTYPE html>
       <html lang="en">
@@ -78,6 +81,7 @@ export const authRoutes = new Elysia({ prefix: '/auth' })
             <div class="card-body p-4">
               <h1 class="h4 fw-bold text-center mb-4">Capuzzella</h1>
               <form method="POST" action="/auth/login">
+                <input type="hidden" name="_csrf" value="${csrfToken}">
                 <div class="mb-3">
                   <label for="username" class="form-label">Username</label>
                   <input type="text" name="username" id="username" required class="form-control">

@@ -14,6 +14,18 @@
 (function () {
   'use strict';
 
+  async function fetchCsrfToken() {
+    const res = await fetch('/api/csrf-token', { credentials: 'include' });
+    if (!res.ok) {
+      throw new Error('Failed to fetch CSRF token');
+    }
+    const data = await res.json();
+    if (!data?.csrfToken) {
+      throw new Error('Missing CSRF token');
+    }
+    return data.csrfToken;
+  }
+
   function initContactForm(form) {
     if (form.dataset.formInit) return;
     form.dataset.formInit = '1';
@@ -61,9 +73,14 @@
       alertEl.className = 'd-none';
 
       try {
+        const csrfToken = await fetchCsrfToken();
         const res = await fetch('/api/form', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfToken
+          },
           body: JSON.stringify(fields),
         });
 

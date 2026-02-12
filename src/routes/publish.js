@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { logger } from '../lib/logger.js';
 import { safePath, PathTraversalError } from '../lib/safe-path.js';
 import { requireAuth, requirePasswordChanged } from '../middleware/auth.js';
+import { verifyCsrfRequest } from '../middleware/csrf.js';
 import { loadManifest } from '../services/asset-manifest.js';
 import { listPages } from '../services/pages.js';
 import { generateSitemap } from '../services/sitemap.js';
@@ -115,7 +116,8 @@ async function publishDraftAssets() {
  * Publish routes plugin for Elysia
  */
 export const publishRoutes = new Elysia({ prefix: '/publish' })
-  .onBeforeHandle(({ session, request, set }) => {
+  .onBeforeHandle((context) => {
+    const { session, request, set } = context;
     const url = new URL(request.url);
     const fullPath = url.pathname;
 
@@ -124,6 +126,8 @@ export const publishRoutes = new Elysia({ prefix: '/publish' })
 
     const pwResult = requirePasswordChanged({ session, path: fullPath, request, set });
     if (pwResult !== undefined) return pwResult;
+
+    return verifyCsrfRequest(context);
   })
 
   /**

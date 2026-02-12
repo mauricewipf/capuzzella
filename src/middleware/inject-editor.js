@@ -6,9 +6,10 @@ import { escapeHtml } from '../lib/escape-html.js';
  * 
  * @param {string} html - The original HTML content
  * @param {string} pagePath - The path to the current page
+ * @param {string} csrfToken - CSRF token for editor API calls
  * @returns {string} - Modified HTML with editor shell (iframe-based)
  */
-export function injectEditor(html, pagePath) {
+export function injectEditor(html, pagePath, csrfToken) {
   // Escape HTML for use in srcdoc attribute
   const escapedHtml = html
     .replace(/&/g, '&amp;')
@@ -26,7 +27,7 @@ export function injectEditor(html, pagePath) {
 <body class="h-100 overflow-hidden">
   <div class="d-flex vh-100 vw-100">
     <iframe id="capuzzella-iframe" class="flex-grow-1 border-0 h-100 min-vw-0" srcdoc="${escapedHtml}"></iframe>
-    <div id="capuzzella-editor" class="d-flex flex-column flex-shrink-0 h-100 bg-dark border-start border-secondary overflow-hidden" style="width: 400px;" data-page-path="${escapeHtml(pagePath)}">
+    <div id="capuzzella-editor" class="d-flex flex-column flex-shrink-0 h-100 bg-dark border-start border-secondary overflow-hidden" style="width: 400px;" data-page-path="${escapeHtml(pagePath)}" data-csrf-token="${escapeHtml(csrfToken)}">
       <!-- Editor UI will be initialized by editor.js -->
     </div>
   </div>

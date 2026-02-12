@@ -1,4 +1,5 @@
 import { Elysia } from 'elysia';
+import { getCsrfToken } from '../middleware/csrf.js';
 import { createSessionCookie, saveSession } from '../middleware/session.js';
 
 /**
@@ -21,6 +22,7 @@ export const designSystemRoutes = new Elysia({ prefix: '/design-system' })
       });
     }
 
+    const csrfToken = getCsrfToken(session);
     set.headers['Content-Type'] = 'text/html';
     return `
       <!DOCTYPE html>
@@ -40,7 +42,10 @@ export const designSystemRoutes = new Elysia({ prefix: '/design-system' })
             <nav class="d-flex gap-3">
               <a href="/pages" class="text-secondary text-decoration-none">Pages</a>
               <a href="/settings" class="text-secondary text-decoration-none">Settings</a>
-              <form method="POST" action="/auth/logout" style="display:inline"><button type="submit" class="btn btn-outline-secondary btn-sm">Sign out</button></form>
+              <form method="POST" action="/auth/logout" style="display:inline">
+                <input type="hidden" name="_csrf" value="${csrfToken}">
+                <button type="submit" class="btn btn-outline-secondary btn-sm">Sign out</button>
+              </form>
             </nav>
           </div>
 

@@ -8,6 +8,7 @@
   // Read page path from data attribute (more reliable than window variable)
   const editorContainer = document.getElementById('capuzzella-editor');
   const PAGE_PATH = editorContainer?.dataset.pagePath || window.CAPUZZELLA_PAGE_PATH || 'index.html';
+  const CSRF_TOKEN = editorContainer?.dataset.csrfToken || '';
   const API_BASE = '/api';
   const STORAGE_KEY = `capuzzella_chat_${PAGE_PATH}`;
 
@@ -280,7 +281,8 @@
         method: 'POST',
         credentials: 'include',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': CSRF_TOKEN
         },
         body: JSON.stringify(requestBody)
       });
@@ -418,7 +420,10 @@
     try {
       const response = await fetch(`/publish/${PAGE_PATH}`, {
         method: 'POST',
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'X-CSRF-Token': CSRF_TOKEN
+        }
       });
 
       if (!response.ok) {
@@ -451,7 +456,10 @@
     try {
       const response = await fetch(`/publish/${PAGE_PATH}`, {
         method: 'DELETE',
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'X-CSRF-Token': CSRF_TOKEN
+        }
       });
 
       if (!response.ok) {

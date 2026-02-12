@@ -4,6 +4,7 @@ import { Elysia } from 'elysia';
 import { logger } from '../lib/logger.js';
 import { safePath, PathTraversalError } from '../lib/safe-path.js';
 import { requireAuth, requirePasswordChanged } from '../middleware/auth.js';
+import { verifyCsrfRequest } from '../middleware/csrf.js';
 import { processChat } from '../services/ai/index.js';
 import { deletePage, getPage, listPages, savePage } from '../services/pages.js';
 
@@ -44,7 +45,8 @@ function validateHtml(html) {
  */
 export const apiRoutes = new Elysia({ prefix: '/api' })
   // Apply auth guards to all routes in this group
-  .onBeforeHandle(({ session, request, set }) => {
+  .onBeforeHandle((context) => {
+    const { session, request, set } = context;
     const url = new URL(request.url);
     const fullPath = url.pathname;
 
@@ -53,6 +55,8 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
 
     const pwResult = requirePasswordChanged({ session, path: fullPath, request, set });
     if (pwResult !== undefined) return pwResult;
+
+    return verifyCsrfRequest(context);
   })
 
   /**

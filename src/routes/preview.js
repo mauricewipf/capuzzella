@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia';
 import { logger } from '../lib/logger.js';
+import { getCsrfToken } from '../middleware/csrf.js';
 import { injectEditor } from '../middleware/inject-editor.js';
 import { createSessionCookie, saveSession } from '../middleware/session.js';
 import { getPage } from '../services/pages.js';
@@ -115,7 +116,7 @@ export async function handleEditMode({ path, query, session, set }) {
 
     // Rewrite asset paths and inject the editor UI into the HTML
     const draftHtml = rewriteDraftAssetPaths(html);
-    const modifiedHtml = injectEditor(draftHtml, pagePath);
+    const modifiedHtml = injectEditor(draftHtml, pagePath, getCsrfToken(session));
 
     set.headers['Content-Type'] = 'text/html';
     return modifiedHtml;
