@@ -28,7 +28,7 @@ export async function sendContactEmail(fields) {
     return { success: false, error: 'Email recipient is not configured' };
   }
 
-  const senderName = fields.name || 'Someone';
+  const senderName = (fields.name || 'Someone').replace(/[\r\n]/g, '');
   const senderEmail = fields.email || undefined;
 
   // Build an HTML table from all submitted fields
