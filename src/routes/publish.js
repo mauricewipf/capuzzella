@@ -18,6 +18,7 @@ const __dirname = path.dirname(__filename);
 
 const DRAFTS_DIR = path.join(__dirname, '../../drafts');
 const PUBLIC_DIR = path.join(__dirname, '../../public');
+const DATA_DIR = path.join(__dirname, '../../data');
 const DRAFTS_ASSETS_DIR = path.join(DRAFTS_DIR, 'assets');
 const PUBLIC_ASSETS_DIR = path.join(PUBLIC_DIR, 'assets');
 
@@ -95,8 +96,9 @@ async function publishDraftAssets() {
   for (const [rel, hash] of hashByBasePath) {
     manifest[rel] = fingerprintedName(rel, hash);
   }
+  await fs.mkdir(DATA_DIR, { recursive: true });
   await fs.writeFile(
-    path.join(PUBLIC_ASSETS_DIR, 'manifest.json'),
+    path.join(DATA_DIR, 'asset-manifest.json'),
     JSON.stringify(manifest, null, 2)
   );
 

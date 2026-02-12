@@ -8,7 +8,7 @@ const log = logger.child('asset-manifest');
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const MANIFEST_PATH = path.join(__dirname, '../../public/assets/manifest.json');
+const MANIFEST_PATH = path.join(__dirname, '../../data/asset-manifest.json');
 
 /**
  * In-memory asset manifest: maps original relative paths to fingerprinted paths.
