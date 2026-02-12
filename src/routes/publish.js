@@ -5,6 +5,7 @@ import path from 'path';
 import { brotliCompressSync } from 'zlib';
 import { fileURLToPath } from 'url';
 import { logger } from '../lib/logger.js';
+import { safePath, PathTraversalError } from '../lib/safe-path.js';
 import { requireAuth, requirePasswordChanged } from '../middleware/auth.js';
 import { loadManifest } from '../services/asset-manifest.js';
 import { listPages } from '../services/pages.js';
@@ -182,6 +183,18 @@ export const publishRoutes = new Elysia({ prefix: '/publish' })
   .get('/status/*', async ({ params, set }) => {
     const pagePath = params['*'];
 
+    // Validate path against both directories
+    try {
+      safePath(DRAFTS_DIR, pagePath);
+      safePath(PUBLIC_DIR, pagePath);
+    } catch (err) {
+      if (err instanceof PathTraversalError) {
+        set.status = 400;
+        return { error: 'Invalid page path' };
+      }
+      throw err;
+    }
+
     try {
       const draftPath = path.join(DRAFTS_DIR, pagePath);
       const publicPath = path.join(PUBLIC_DIR, pagePath);
@@ -233,6 +246,18 @@ export const publishRoutes = new Elysia({ prefix: '/publish' })
     // Skip the root publish route
     if (!pagePath) return;
 
+    // Validate path against both directories
+    try {
+      safePath(DRAFTS_DIR, pagePath);
+      safePath(PUBLIC_DIR, pagePath);
+    } catch (err) {
+      if (err instanceof PathTraversalError) {
+        set.status = 400;
+        return { error: 'Invalid page path' };
+      }
+      throw err;
+    }
+
     try {
       const sourcePath = path.join(DRAFTS_DIR, pagePath);
       const destPath = path.join(PUBLIC_DIR, pagePath);
@@ -273,6 +298,17 @@ export const publishRoutes = new Elysia({ prefix: '/publish' })
    */
   .delete('/*', async ({ params, set }) => {
     const pagePath = params['*'];
+
+    // Validate path against public directory
+    try {
+      safePath(PUBLIC_DIR, pagePath);
+    } catch (err) {
+      if (err instanceof PathTraversalError) {
+        set.status = 400;
+        return { error: 'Invalid page path' };
+      }
+      throw err;
+    }
 
     try {
       const publicPath = path.join(PUBLIC_DIR, pagePath);

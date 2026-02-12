@@ -1,8 +1,15 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { Elysia } from 'elysia';
 import { logger } from '../lib/logger.js';
+import { safePath, PathTraversalError } from '../lib/safe-path.js';
 import { requireAuth, requirePasswordChanged } from '../middleware/auth.js';
 import { processChat } from '../services/ai/index.js';
 import { deletePage, getPage, listPages, savePage } from '../services/pages.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const DRAFTS_DIR = path.join(__dirname, '../../drafts');
 
 const log = logger.child('api');
 
@@ -59,6 +66,17 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
       return { error: 'Message and pagePath are required' };
     }
 
+    // Validate pagePath before any file operations
+    try {
+      safePath(DRAFTS_DIR, pagePath);
+    } catch (err) {
+      if (err instanceof PathTraversalError) {
+        set.status = 400;
+        return { error: 'Invalid page path' };
+      }
+      throw err;
+    }
+
     try {
       // Get current page content (may be null if page doesn't exist)
       const currentHtml = await getPage(pagePath);
@@ -67,6 +85,21 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
 
       // Handle different actions
       if (result.action === 'create' && result.newPagePath && result.updatedHtml) {
+        // Validate AI-generated newPagePath before saving
+        try {
+          safePath(DRAFTS_DIR, result.newPagePath);
+        } catch (err) {
+          if (err instanceof PathTraversalError) {
+            log.warn('AI returned invalid newPagePath', { newPagePath: result.newPagePath });
+            set.status = 422;
+            return {
+              error: 'AI returned an invalid page path',
+              conversationId: result.conversationId
+            };
+          }
+          throw err;
+        }
+
         // Validate new page HTML before saving
         const validation = validateHtml(result.updatedHtml);
         if (!validation.valid) {
@@ -156,6 +189,17 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
   .get('/pages/*', async ({ params, set }) => {
     const pagePath = params['*'];
 
+    // Defense-in-depth: validate path at the route level too
+    try {
+      safePath(DRAFTS_DIR, pagePath);
+    } catch (err) {
+      if (err instanceof PathTraversalError) {
+        set.status = 400;
+        return { error: 'Invalid page path' };
+      }
+      throw err;
+    }
+
     try {
       const html = await getPage(pagePath);
 
@@ -184,6 +228,17 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
       return { error: 'HTML content is required' };
     }
 
+    // Defense-in-depth: validate path at the route level too
+    try {
+      safePath(DRAFTS_DIR, pagePath);
+    } catch (err) {
+      if (err instanceof PathTraversalError) {
+        set.status = 400;
+        return { error: 'Invalid page path' };
+      }
+      throw err;
+    }
+
     try {
       await savePage(pagePath, html);
       return { success: true };
@@ -199,6 +254,17 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
    */
   .delete('/pages/*', async ({ params, set }) => {
     const pagePath = params['*'];
+
+    // Defense-in-depth: validate path at the route level too
+    try {
+      safePath(DRAFTS_DIR, pagePath);
+    } catch (err) {
+      if (err instanceof PathTraversalError) {
+        set.status = 400;
+        return { error: 'Invalid page path' };
+      }
+      throw err;
+    }
 
     try {
       await deletePage(pagePath);

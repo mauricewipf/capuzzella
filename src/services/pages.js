@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { safePath } from '../lib/safe-path.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,7 +23,7 @@ async function ensureDraftsDir() {
  */
 export async function getPage(pagePath) {
   try {
-    const fullPath = path.join(DRAFTS_DIR, pagePath);
+    const fullPath = safePath(DRAFTS_DIR, pagePath);
     const content = await fs.readFile(fullPath, 'utf-8');
     return content;
   } catch (error) {
@@ -42,7 +43,7 @@ export async function getPage(pagePath) {
 export async function savePage(pagePath, html) {
   await ensureDraftsDir();
   
-  const fullPath = path.join(DRAFTS_DIR, pagePath);
+  const fullPath = safePath(DRAFTS_DIR, pagePath);
   
   // Ensure parent directory exists
   await fs.mkdir(path.dirname(fullPath), { recursive: true });
@@ -56,7 +57,7 @@ export async function savePage(pagePath, html) {
  * @param {string} pagePath - Relative path to the page
  */
 export async function deletePage(pagePath) {
-  const fullPath = path.join(DRAFTS_DIR, pagePath);
+  const fullPath = safePath(DRAFTS_DIR, pagePath);
   
   try {
     await fs.unlink(fullPath);
@@ -76,7 +77,7 @@ export async function deletePage(pagePath) {
 export async function listPages(dir = '') {
   await ensureDraftsDir();
   
-  const fullDir = path.join(DRAFTS_DIR, dir);
+  const fullDir = dir ? safePath(DRAFTS_DIR, dir) : DRAFTS_DIR;
   const pages = [];
   
   try {
