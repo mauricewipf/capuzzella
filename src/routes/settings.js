@@ -68,7 +68,7 @@ export const settingsRoutes = new Elysia({ prefix: '/settings' })
             <nav class="d-flex gap-3">
               <a href="/pages" class="text-secondary text-decoration-none">Pages</a>
               <a href="/design-system" class="text-secondary text-decoration-none">Design System</a>
-              <a href="/auth/logout" class="text-danger text-decoration-none">Sign out</a>
+                <form method="POST" action="/auth/logout" style="display:inline"><button type="submit" class="btn btn-outline-secondary btn-sm">Sign out</button></form>
             </nav>
           </div>
 

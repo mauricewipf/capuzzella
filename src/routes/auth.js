@@ -171,20 +171,6 @@ export const authRoutes = new Elysia({ prefix: '/auth' })
         'Set-Cookie': createClearSessionCookie()
       }
     });
-  })
-
-  /**
-   * GET /auth/logout - Handle logout via GET (convenience)
-   */
-  .get('/logout', ({ session }) => {
-    session.destroy();
-    return new Response(null, {
-      status: 302,
-      headers: {
-        'Location': '/auth/login',
-        'Set-Cookie': createClearSessionCookie()
-      }
-    });
   });
 
 export default authRoutes;
