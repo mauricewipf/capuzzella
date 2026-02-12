@@ -89,14 +89,19 @@ bun run scripts/create-user.js username password
 ```
 capuzzella/
 ├── src/
-│   └── server.js              # Bun server entry
-├── drafts/                    # Working HTML files (editable)
-├── public/                    # Published HTML files (read-only)
-├── components/                # Reusable component templates
-├── scripts/                   # Utility scripts
-│   └── create-user.js         # Create admin users
-├── data/                      # SQLite database storage
-├── .env                       # Environment configuration
+│   └── server.js                         # Bun server entry
+├── drafts/                               # Working HTML files (editable)
+│   └── assets/
+│       ├── css/
+│       │   ├── bootstrap.min.css
+│       │   └── theme.css                 # Add CSS here to customize global design/theme
+│       └── js/
+│           └── bootstrap.bundle.min.js
+├── public/                               # Published HTML files (read-only)
+├── scripts/                              # Utility scripts
+│   └── create-user.js                    # Create admin users
+├── data/                                 # SQLite database storage
+├── .env                                  # Environment configuration
 └── package.json
 ```
 
