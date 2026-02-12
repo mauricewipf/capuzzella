@@ -1,6 +1,9 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { logger } from '../lib/logger.js';
+
+const log = logger.child('asset-manifest');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,7 +28,7 @@ export async function loadManifest() {
     if (err.code === 'ENOENT') {
       manifest = {};
     } else {
-      console.error('Failed to load asset manifest:', err);
+      log.error('Failed to load asset manifest', { error: err.message });
       manifest = {};
     }
   }

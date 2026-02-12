@@ -3,6 +3,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { getDb } from './db/index.js';
+import { logger } from './lib/logger.js';
+import { requestLoggerPlugin } from './middleware/request-logger.js';
 import { initSessionTable, sessionPlugin, startSessionCleanup } from './middleware/session.js';
 import { handleDraftPreview, handleEditMode } from './routes/preview.js';
 import { loadManifest, rewriteAssetPaths } from './services/asset-manifest.js';
@@ -14,6 +16,8 @@ import { designSystemRoutes } from './routes/design-system.js';
 import { pagesRoutes } from './routes/pages.js';
 import { publishRoutes } from './routes/publish.js';
 import { settingsRoutes } from './routes/settings.js';
+
+const log = logger.child('server');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -183,6 +187,9 @@ const app = new Elysia()
   // Add session support
   .use(sessionPlugin)
 
+  // HTTP request logging
+  .use(requestLoggerPlugin)
+
   // Health check endpoint
   .get('/health', () => 'ok')
 
@@ -215,7 +222,7 @@ const app = new Elysia()
 
   // Error handler
   .onError(({ error, set }) => {
-    console.error('Server error:', error);
+    log.error('Server error', { error: error.message, stack: error.stack });
     set.status = 500;
     return { error: 'Something went wrong!' };
   })

@@ -1,6 +1,9 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { logger } from '../lib/logger.js';
+
+const log = logger.child('sitemap');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -138,7 +141,7 @@ export async function generateSitemap() {
     // Write sitemap to file
     await fs.writeFile(SITEMAP_PATH, sitemapXml, 'utf-8');
     
-    console.log(`Sitemap generated with ${pages.length} pages`);
+    log.info(`Sitemap generated with ${pages.length} pages`);
     
     return {
       success: true,
@@ -146,7 +149,7 @@ export async function generateSitemap() {
       path: 'sitemap.xml'
     };
   } catch (error) {
-    console.error('Failed to generate sitemap:', error);
+    log.error('Failed to generate sitemap', { error: error.message });
     throw error;
   }
 }

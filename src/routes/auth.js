@@ -1,6 +1,9 @@
 import { Elysia } from 'elysia';
+import { logger } from '../lib/logger.js';
 import { createClearSessionCookie, createSessionCookie, saveSession } from '../middleware/session.js';
 import { authenticateUser } from '../services/auth.js';
+
+const log = logger.child('auth');
 
 /**
  * Auth routes plugin for Elysia
@@ -96,7 +99,7 @@ export const authRoutes = new Elysia({ prefix: '/auth' })
       set.status = 401;
       return 'Invalid credentials';
     } catch (error) {
-      console.error('Login error:', error);
+      log.error('Login error', { error: error.message });
       set.status = 500;
       return 'Login failed';
     }

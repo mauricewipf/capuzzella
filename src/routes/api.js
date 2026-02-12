@@ -1,7 +1,10 @@
 import { Elysia } from 'elysia';
+import { logger } from '../lib/logger.js';
 import { requireAuth, requirePasswordChanged } from '../middleware/auth.js';
 import { processChat } from '../services/ai/index.js';
 import { deletePage, getPage, listPages, savePage } from '../services/pages.js';
+
+const log = logger.child('api');
 
 /**
  * API routes plugin for Elysia
@@ -68,7 +71,7 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
         };
       }
     } catch (error) {
-      console.error('Chat error:', error);
+      log.error('Chat error', { error: error.message, stack: error.stack });
 
       set.status = 500;
       return {
@@ -90,7 +93,7 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
       const pages = await listPages();
       return { pages };
     } catch (error) {
-      console.error('List pages error:', error);
+      log.error('List pages error', { error: error.message });
       set.status = 500;
       return { error: 'Failed to list pages' };
     }
@@ -112,7 +115,7 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
 
       return { html };
     } catch (error) {
-      console.error('Get page error:', error);
+      log.error('Get page error', { error: error.message });
       set.status = 500;
       return { error: 'Failed to get page' };
     }
@@ -134,7 +137,7 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
       await savePage(pagePath, html);
       return { success: true };
     } catch (error) {
-      console.error('Save page error:', error);
+      log.error('Save page error', { error: error.message });
       set.status = 500;
       return { error: 'Failed to save page' };
     }
@@ -150,7 +153,7 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
       await deletePage(pagePath);
       return { success: true };
     } catch (error) {
-      console.error('Delete page error:', error);
+      log.error('Delete page error', { error: error.message });
       set.status = 500;
       return { error: 'Failed to delete page' };
     }

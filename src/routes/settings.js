@@ -1,6 +1,9 @@
 import { Elysia } from 'elysia';
+import { logger } from '../lib/logger.js';
 import { createSessionCookie, saveSession } from '../middleware/session.js';
 import { updatePassword } from '../services/auth.js';
+
+const log = logger.child('settings');
 
 /**
  * Escape HTML to prevent XSS
@@ -157,7 +160,7 @@ export const settingsRoutes = new Elysia({ prefix: '/settings' })
         });
       }
     } catch (error) {
-      console.error('Password update error:', error);
+      log.error('Password update error', { error: error.message });
       return new Response(null, {
         status: 302,
         headers: { 'Location': '/settings?error=' + encodeURIComponent('Failed to update password') }

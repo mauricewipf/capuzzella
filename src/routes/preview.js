@@ -1,7 +1,10 @@
 import { Elysia } from 'elysia';
+import { logger } from '../lib/logger.js';
 import { injectEditor } from '../middleware/inject-editor.js';
 import { createSessionCookie, saveSession } from '../middleware/session.js';
 import { getPage } from '../services/pages.js';
+
+const log = logger.child('preview');
 
 /**
  * Normalize page path from URL
@@ -59,7 +62,7 @@ export async function handleDraftPreview({ path, query, session, set }) {
     set.headers['Content-Type'] = 'text/html';
     return html;
   } catch (error) {
-    console.error('Draft preview error:', error);
+    log.error('Draft preview error', { error: error.message });
     set.status = 500;
     return 'Failed to load draft';
   }
@@ -104,7 +107,7 @@ export async function handleEditMode({ path, query, session, set }) {
     set.headers['Content-Type'] = 'text/html';
     return modifiedHtml;
   } catch (error) {
-    console.error('Preview error:', error);
+    log.error('Edit mode error', { error: error.message });
     set.status = 500;
     return 'Failed to load preview';
   }

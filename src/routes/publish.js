@@ -4,10 +4,13 @@ import fs from 'fs/promises';
 import path from 'path';
 import { brotliCompressSync } from 'zlib';
 import { fileURLToPath } from 'url';
+import { logger } from '../lib/logger.js';
 import { requireAuth, requirePasswordChanged } from '../middleware/auth.js';
 import { loadManifest } from '../services/asset-manifest.js';
 import { listPages } from '../services/pages.js';
 import { generateSitemap } from '../services/sitemap.js';
+
+const log = logger.child('publish');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -141,7 +144,7 @@ export const publishRoutes = new Elysia({ prefix: '/publish' })
           await fs.copyFile(sourcePath, destPath);
           published.push(pagePath);
         } catch (error) {
-          console.error(`Failed to publish ${pagePath}:`, error);
+          log.error(`Failed to publish ${pagePath}`, { error: error.message });
           errors.push({ path: pagePath, error: error.message });
         }
       }
@@ -149,7 +152,7 @@ export const publishRoutes = new Elysia({ prefix: '/publish' })
       try {
         await publishDraftAssets();
       } catch (assetsError) {
-        console.error('Failed to publish draft assets:', assetsError);
+        log.error('Failed to publish draft assets', { error: assetsError.message });
         errors.push({ path: 'assets', error: assetsError.message });
       }
 
@@ -157,7 +160,7 @@ export const publishRoutes = new Elysia({ prefix: '/publish' })
       try {
         sitemap = await generateSitemap();
       } catch (sitemapError) {
-        console.error('Failed to generate sitemap:', sitemapError);
+        log.error('Failed to generate sitemap', { error: sitemapError.message });
       }
 
       return {
@@ -167,7 +170,7 @@ export const publishRoutes = new Elysia({ prefix: '/publish' })
         sitemap
       };
     } catch (error) {
-      console.error('Publish error:', error);
+      log.error('Publish all error', { error: error.message });
       set.status = 500;
       return { error: 'Failed to publish pages' };
     }
@@ -215,7 +218,7 @@ export const publishRoutes = new Elysia({ prefix: '/publish' })
 
       return { pagePath, isPublished, hasUnpublishedChanges };
     } catch (error) {
-      console.error('Status check error:', error);
+      log.error('Status check error', { error: error.message });
       set.status = 500;
       return { error: 'Failed to check publish status' };
     }
@@ -247,19 +250,19 @@ export const publishRoutes = new Elysia({ prefix: '/publish' })
       try {
         await publishDraftAssets();
       } catch (assetsError) {
-        console.error('Failed to publish draft assets:', assetsError);
+        log.error('Failed to publish draft assets', { error: assetsError.message });
       }
 
       let sitemap;
       try {
         sitemap = await generateSitemap();
       } catch (sitemapError) {
-        console.error('Failed to generate sitemap:', sitemapError);
+        log.error('Failed to generate sitemap', { error: sitemapError.message });
       }
 
       return { success: true, published: pagePath, sitemap };
     } catch (error) {
-      console.error('Publish error:', error);
+      log.error('Publish page error', { error: error.message, pagePath });
       set.status = 500;
       return { error: 'Failed to publish page' };
     }
@@ -287,12 +290,12 @@ export const publishRoutes = new Elysia({ prefix: '/publish' })
       try {
         sitemap = await generateSitemap();
       } catch (sitemapError) {
-        console.error('Failed to generate sitemap:', sitemapError);
+        log.error('Failed to generate sitemap', { error: sitemapError.message });
       }
 
       return { success: true, unpublished: pagePath, sitemap };
     } catch (error) {
-      console.error('Unpublish error:', error);
+      log.error('Unpublish error', { error: error.message, pagePath });
       set.status = 500;
       return { error: 'Failed to unpublish page' };
     }

@@ -4,6 +4,9 @@
 
 import crypto from 'crypto';
 import { getDb } from '../db/index.js';
+import { logger } from '../lib/logger.js';
+
+const log = logger.child('session');
 
 const SESSION_COOKIE_NAME = 'capuzzella.sid';
 const SESSION_MAX_AGE = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
@@ -27,10 +30,10 @@ export function initSessionTable() {
     const expiredCol = columns.find(c => c.name === 'expired');
 
     if (expiredCol && expiredCol.type !== 'INTEGER') {
-      console.log('Migrating sessions table to new schema...');
+      log.info('Migrating sessions table to new schema');
       db.exec('DROP TABLE sessions');
     } else if (!expiredCol) {
-      console.log('Migrating sessions table to new schema...');
+      log.info('Migrating sessions table to new schema');
       db.exec('DROP TABLE sessions');
     }
   }
@@ -118,7 +121,7 @@ export function startSessionCleanup() {
     try {
       cleanupExpiredSessions();
     } catch (error) {
-      console.error('Session cleanup error:', error);
+      log.error('Session cleanup error', { error: error.message });
     }
   }, CLEANUP_INTERVAL);
 }

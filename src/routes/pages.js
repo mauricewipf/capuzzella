@@ -2,8 +2,11 @@ import { Elysia } from 'elysia';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { logger } from '../lib/logger.js';
 import { requireAuth } from '../middleware/auth.js';
 import { listPages } from '../services/pages.js';
+
+const log = logger.child('pages');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -196,7 +199,7 @@ export const pagesRoutes = new Elysia({ prefix: '/pages' })
         </html>
       `;
     } catch (error) {
-      console.error('Pages list error:', error);
+      log.error('Pages list error', { error: error.message });
       set.status = 500;
       return 'Failed to load pages';
     }
