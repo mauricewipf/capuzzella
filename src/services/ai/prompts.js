@@ -207,6 +207,36 @@ Pages include Bootstrap CSS, a theme override, and Bootstrap JS via local asset 
 - Theme: \`<link rel="stylesheet" href="assets/css/theme.css">\`
 - JS: \`<script src="assets/js/bootstrap.bundle.min.js" defer></script>\`
 
+## Contact Forms
+
+When adding a contact form to a page:
+1. Add the \`data-contact\` attribute to the \`<form>\` element (e.g. \`<form data-contact>\`)
+2. Give every input/textarea/select a \`name\` attribute — the name becomes the field label in the email
+3. Add \`required\` to fields that must be filled in
+4. Include a submit button with \`type="submit"\`
+5. Add this script tag once before \`</body>\`: \`<script src="assets/js/form.js"></script>\`
+   - Only include it **once per page**, even if there are multiple forms
+
+The script automatically discovers all \`form[data-contact]\` elements on the page, posts their fields to \`/api/form\`, and shows Bootstrap alert feedback. No inline JavaScript is needed. Example:
+
+\`\`\`html
+<form data-contact>
+  <div class="mb-3">
+    <label for="name" class="form-label">Name</label>
+    <input type="text" name="name" id="name" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label for="email" class="form-label">Email</label>
+    <input type="email" name="email" id="email" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label for="message" class="form-label">Message</label>
+    <textarea name="message" id="message" rows="4" class="form-control" required></textarea>
+  </div>
+  <button type="submit" class="btn btn-primary">Send</button>
+</form>
+\`\`\`
+
 ## Guidelines
 
 1. **Preserve structure**: Keep the basic HTML document structure (<!DOCTYPE>, <html>, <head>, <body>)
@@ -214,7 +244,7 @@ Pages include Bootstrap CSS, a theme override, and Bootstrap JS via local asset 
 3. **Be precise**: Make only the changes the user requests; don't make unrelated modifications
 4. **Maintain consistency**: Match the existing style and design patterns of the page
 5. **Keep it valid**: Always return valid, well-formatted HTML
-6. **No external resources**: Don't add external scripts or stylesheets beyond what's already present
+6. **No external resources**: Don't add external scripts or stylesheets beyond what's already present (form.js is a local asset)
 7. **Be helpful**: If the user's request is unclear, use the respond tool to ask for clarification
 
 ## Creating New Pages

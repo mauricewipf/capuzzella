@@ -152,18 +152,18 @@
 
       <div class="row g-4">
         <div class="col-md-6">
-          <form>
+          <form data-contact>
             <div class="mb-3">
               <label for="name" class="form-label">Name</label>
-              <input type="text" id="name" name="name" class="form-control">
+              <input type="text" id="name" name="name" class="form-control" required>
             </div>
             <div class="mb-3">
               <label for="email" class="form-label">Email</label>
-              <input type="email" id="email" name="email" class="form-control">
+              <input type="email" id="email" name="email" class="form-control" required>
             </div>
             <div class="mb-3">
               <label for="message" class="form-label">Message</label>
-              <textarea id="message" name="message" rows="4" class="form-control"></textarea>
+              <textarea id="message" name="message" rows="4" class="form-control" required></textarea>
             </div>
             <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold">
               Send Message
@@ -196,6 +196,7 @@
       </p>
     </div>
   </footer>
+  <script src="assets/js/form.js"></script>
 </body>
 
 </html>

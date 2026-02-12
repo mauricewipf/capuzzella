@@ -21,7 +21,8 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.33.1",
     "elysia": "^1.4.22",
-    "openai": "^4.104.0"
+    "openai": "^4.104.0",
+    "resend": "^6.9.2"
   },
   "devDependencies": {
     "bootstrap": "^5.3.8"

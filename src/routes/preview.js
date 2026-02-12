@@ -7,6 +7,18 @@ import { getPage } from '../services/pages.js';
 const log = logger.child('preview');
 
 /**
+ * Append ?source=draft to asset paths in draft HTML so the server knows to
+ * serve files from drafts/assets/ instead of public/assets/.
+ */
+function rewriteDraftAssetPaths(html) {
+  // Match asset paths in href="..." and src="..." attributes (both relative and absolute)
+  return html.replace(
+    /((?:href|src)\s*=\s*["'])((?:\/)?assets\/[^"'?]+)(["'])/gi,
+    '$1$2?source=draft$3'
+  );
+}
+
+/**
  * Normalize page path from URL
  */
 function normalizePath(pathname) {
@@ -60,7 +72,7 @@ export async function handleDraftPreview({ path, query, session, set }) {
     }
 
     set.headers['Content-Type'] = 'text/html';
-    return html;
+    return rewriteDraftAssetPaths(html);
   } catch (error) {
     log.error('Draft preview error', { error: error.message });
     set.status = 500;
@@ -101,8 +113,9 @@ export async function handleEditMode({ path, query, session, set }) {
       return 'Page not found in drafts';
     }
 
-    // Inject the editor UI into the HTML
-    const modifiedHtml = injectEditor(html, pagePath);
+    // Rewrite asset paths and inject the editor UI into the HTML
+    const draftHtml = rewriteDraftAssetPaths(html);
+    const modifiedHtml = injectEditor(draftHtml, pagePath);
 
     set.headers['Content-Type'] = 'text/html';
     return modifiedHtml;

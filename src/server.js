@@ -12,6 +12,7 @@ import { loadManifest, rewriteAssetPaths } from './services/asset-manifest.js';
 // Import route plugins
 import { apiRoutes } from './routes/api.js';
 import { authRoutes } from './routes/auth.js';
+import { formRoutes } from './routes/forms.js';
 import { designSystemRoutes } from './routes/design-system.js';
 import { pagesRoutes } from './routes/pages.js';
 import { publishRoutes } from './routes/publish.js';
@@ -142,15 +143,18 @@ async function tryServeStatic(reqPath, request) {
     return await serveStaticFile(filepath);
   }
 
-  // Serve draft assets (e.g. /assets/css/main.css or /about/assets/css/main.css from drafts/assets/)
-  const assetsMatch = reqPath.match(/\/assets\/(.+)$/);
+  // Serve assets: ?source=draft → drafts/assets/, otherwise → public/assets/
+  const assetsMatch = reqPath.match(/^\/assets\/(.+)$/);
   if (assetsMatch) {
-    const draftAssetPath = path.join(DRAFTS_DIR, 'assets', assetsMatch[1]);
-    const brResponse = await serveStaticFileWithBr(draftAssetPath, request);
-    if (brResponse) return brResponse;
+    const url = new URL(request.url);
+    if (url.searchParams.get('source') === 'draft') {
+      const draftAssetPath = path.join(DRAFTS_DIR, 'assets', assetsMatch[1]);
+      const brResponse = await serveStaticFileWithBr(draftAssetPath, request);
+      if (brResponse) return brResponse;
+      return await serveStaticFile(draftAssetPath);
+    }
 
-    const response = await serveStaticFile(draftAssetPath);
-    if (response) return response;
+    // Public assets (fingerprinted) — fall through to public directory handling below
   }
 
   // Serve static files from public directory
@@ -194,6 +198,7 @@ const app = new Elysia()
   .get('/health', () => 'ok')
 
   // Register route plugins FIRST (before any wildcards)
+  .use(formRoutes)
   .use(apiRoutes)
   .use(authRoutes)
   .use(pagesRoutes)
