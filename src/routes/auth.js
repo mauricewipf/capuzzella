@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia';
 import { logger } from '../lib/logger.js';
 import { getClientIp } from '../lib/get-client-ip.js';
-import { createClearSessionCookie, createSessionCookie, saveSession } from '../middleware/session.js';
+import { createClearSessionCookie, createSessionCookie, saveSession, regenerateSession } from '../middleware/session.js';
 import { authenticateUser } from '../services/auth.js';
 
 const log = logger.child('auth');
@@ -118,33 +118,35 @@ export const authRoutes = new Elysia({ prefix: '/auth' })
         // Successful login — clear failed attempt counter
         clearLoginAttempts(ip);
 
-        session.userId = user.id;
-        session.username = user.username;
-        session.mustChangePassword = user.mustChangePassword;
+        // Preserve returnTo before regenerating the session
+        const returnTo = session.returnTo || '/';
+
+        // Regenerate session ID to prevent session fixation attacks
+        const oldSessionId = session._sessionId;
+        const sessionData = {
+          userId: user.id,
+          username: user.username,
+          mustChangePassword: user.mustChangePassword
+        };
+        const newSessionId = regenerateSession(oldSessionId, sessionData);
 
         // Force redirect to settings if user must change their password
         if (user.mustChangePassword) {
-          // Save session and redirect with cookie
-          saveSession(session._sessionId, session._getData());
           return new Response(null, {
             status: 302,
             headers: {
               'Location': '/settings?message=' + encodeURIComponent('Please change your generated password before continuing'),
-              'Set-Cookie': createSessionCookie(session._sessionId)
+              'Set-Cookie': createSessionCookie(newSessionId)
             }
           });
         }
 
         // Redirect to the page they were trying to access, or home
-        const returnTo = session.returnTo || '/';
-        delete session.returnTo;
-        // Save session and redirect with cookie
-        saveSession(session._sessionId, session._getData());
         return new Response(null, {
           status: 302,
           headers: {
             'Location': returnTo,
-            'Set-Cookie': createSessionCookie(session._sessionId)
+            'Set-Cookie': createSessionCookie(newSessionId)
           }
         });
       }

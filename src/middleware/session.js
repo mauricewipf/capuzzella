@@ -103,6 +103,20 @@ export function destroySession(sessionId) {
 }
 
 /**
+ * Regenerate a session: create a new session ID, copy data over, destroy the old one.
+ * Prevents session fixation attacks by ensuring a fresh ID after privilege changes (e.g. login).
+ * @param {string} oldSessionId - The current session ID to replace
+ * @param {object} data - Session data to carry over to the new session
+ * @returns {string} The new session ID
+ */
+export function regenerateSession(oldSessionId, data) {
+  const newSessionId = generateSessionId();
+  saveSession(newSessionId, data);
+  destroySession(oldSessionId);
+  return newSessionId;
+}
+
+/**
  * Clean up expired sessions
  */
 export function cleanupExpiredSessions() {
@@ -264,6 +278,7 @@ export default {
   getSession,
   saveSession,
   destroySession,
+  regenerateSession,
   cleanupExpiredSessions,
   startSessionCleanup,
   stopSessionCleanup,
