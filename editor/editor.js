@@ -318,7 +318,11 @@
         const messagesContainer = document.getElementById('capuzzella-messages');
         const linkEl = document.createElement('div');
         linkEl.className = getMessageClasses('system');
-        linkEl.innerHTML = `<a href="/${data.newPagePath}?edit=true" class="btn btn-sm btn-outline-primary">Open new page &rarr;</a>`;
+        const linkAnchor = document.createElement('a');
+        linkAnchor.href = `/${data.newPagePath}?edit=true`;
+        linkAnchor.className = 'btn btn-sm btn-outline-primary';
+        linkAnchor.textContent = 'Open new page \u2192';
+        linkEl.appendChild(linkAnchor);
         messagesContainer.appendChild(linkEl);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
