@@ -6,6 +6,46 @@ import { authenticateUser } from '../services/auth.js';
 const log = logger.child('auth');
 
 /**
+ * In-memory rate limiter for login attempts.
+ * Tracks failed login timestamps per IP and rejects if the limit is exceeded.
+ */
+const loginAttemptMap = new Map();
+const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const LOGIN_MAX_ATTEMPTS = 5;
+
+function isLoginRateLimited(ip) {
+  const now = Date.now();
+  const timestamps = loginAttemptMap.get(ip) || [];
+  const recent = timestamps.filter((t) => now - t < LOGIN_WINDOW_MS);
+  loginAttemptMap.set(ip, recent);
+  return recent.length >= LOGIN_MAX_ATTEMPTS;
+}
+
+function recordFailedLogin(ip) {
+  const now = Date.now();
+  const timestamps = loginAttemptMap.get(ip) || [];
+  timestamps.push(now);
+  loginAttemptMap.set(ip, timestamps);
+}
+
+function clearLoginAttempts(ip) {
+  loginAttemptMap.delete(ip);
+}
+
+// Periodically clean up stale entries (every 30 minutes)
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, timestamps] of loginAttemptMap) {
+    const recent = timestamps.filter((t) => now - t < LOGIN_WINDOW_MS);
+    if (recent.length === 0) {
+      loginAttemptMap.delete(ip);
+    } else {
+      loginAttemptMap.set(ip, recent);
+    }
+  }
+}, 30 * 60 * 1000);
+
+/**
  * Auth routes plugin for Elysia
  */
 export const authRoutes = new Elysia({ prefix: '/auth' })
@@ -58,13 +98,25 @@ export const authRoutes = new Elysia({ prefix: '/auth' })
   /**
    * POST /auth/login - Handle login
    */
-  .post('/login', async ({ body, session, set }) => {
+  .post('/login', async ({ body, session, set, request }) => {
+    const ip = request.headers.get('x-real-ip') || 'unknown';
+
+    // Check rate limit before attempting authentication
+    if (isLoginRateLimited(ip)) {
+      log.warn('Login rate limit exceeded', { ip });
+      set.status = 429;
+      return 'Too many login attempts. Please try again later.';
+    }
+
     const { username, password } = body;
 
     try {
       const user = await authenticateUser(username, password);
 
       if (user) {
+        // Successful login — clear failed attempt counter
+        clearLoginAttempts(ip);
+
         session.userId = user.id;
         session.username = user.username;
         session.mustChangePassword = user.mustChangePassword;
@@ -96,6 +148,8 @@ export const authRoutes = new Elysia({ prefix: '/auth' })
         });
       }
 
+      // Failed login — record the attempt
+      recordFailedLogin(ip);
       set.status = 401;
       return 'Invalid credentials';
     } catch (error) {
