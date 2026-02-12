@@ -10,7 +10,6 @@ COPY src/ ./src/
 COPY public/ ./public/
 COPY editor/ ./editor/
 COPY drafts/ ./drafts/
-COPY components/ ./components/
 
 # Create data directory for SQLite database
 RUN mkdir -p ./data
