@@ -159,12 +159,7 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
 
       set.status = 500;
       return {
-        error: 'Failed to process chat message',
-        message: error.message,
-        ...(process.env.NODE_ENV !== 'production' && {
-          stack: error.stack,
-          name: error.name
-        })
+        error: 'Failed to process chat message'
       };
     }
   })

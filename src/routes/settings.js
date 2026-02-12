@@ -37,14 +37,12 @@ export const settingsRoutes = new Elysia({ prefix: '/settings' })
       {
         name: 'OpenAI',
         id: 'openai',
-        configured: !!process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-'),
         model: process.env.OPENAI_MODEL || 'gpt-4o',
         active: aiProvider === 'openai',
       },
       {
         name: 'Anthropic',
         id: 'anthropic',
-        configured: !!process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY.startsWith('sk-ant-'),
         model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514',
         active: aiProvider === 'anthropic',
       },
@@ -101,10 +99,7 @@ export const settingsRoutes = new Elysia({ prefix: '/settings' })
                     ${p.active ? '<span class="badge bg-primary ms-2">Active</span>' : ''}
                   </div>
                   <div>
-                    <span class="text-body-secondary me-3">${escapeHtml(p.model)}</span>
-                    ${p.configured
-        ? '<span class="badge bg-success">Configured</span>'
-        : '<span class="badge bg-danger">No API key configured</span>'}
+                    <span class="text-body-secondary">${escapeHtml(p.model)}</span>
                   </div>
                 </div>
               `).join('')}
