@@ -129,7 +129,7 @@ export const pagesRoutes = new Elysia({ prefix: '/pages' })
               </div>
             ` : `
               <table class="table table-striped align-middle">
-                <caption>${pagesWithStatus.length} pages &middot; ${pagesWithStatus.filter(p => p.isPublished && !p.hasUnpublishedChanges).length} published &middot; ${pagesWithStatus.filter(p => p.hasUnpublishedChanges || !p.isPublished).length} unpublished</caption>
+                <caption><a href="/sitemap.xml" target="_blank">sitemap.xml</a> &middot; ${pagesWithStatus.length} pages &middot; ${pagesWithStatus.filter(p => p.isPublished && !p.hasUnpublishedChanges).length} published &middot; ${pagesWithStatus.filter(p => p.hasUnpublishedChanges || !p.isPublished).length} unpublished</caption>
                 <thead class="table-light">
                   <tr>
                     <th scope="col">Page</th>
