@@ -7,7 +7,8 @@
   "scripts": {
     "start": "bun run src/server.js",
     "dev": "bun --watch run src/server.js",
-    "generate:secret": "openssl rand -hex 32"
+    "generate:secret": "openssl rand -hex 32",
+    "copy:bootstrap": "cp node_modules/bootstrap/dist/css/bootstrap.min.css drafts/assets/css/bootstrap.min.css && cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js drafts/assets/js/bootstrap.bundle.min.js"
   },
   "keywords": [
     "website-builder",
@@ -18,8 +19,10 @@
   "license": "ISC",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.33.1",
-    "bootstrap": "v5.3.8",
     "elysia": "^1.4.22",
     "openai": "^4.104.0"
+  },
+  "devDependencies": {
+    "bootstrap": "^5.3.8"
   }
 }
