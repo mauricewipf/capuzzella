@@ -26,7 +26,7 @@ function getClient() {
 export async function processWithOpenAI(systemPrompt, userMessage) {
   const client = getClient();
   const model = process.env.OPENAI_MODEL || 'gpt-4o';
-  
+
   const response = await client.chat.completions.create({
     model,
     messages: [
@@ -35,21 +35,21 @@ export async function processWithOpenAI(systemPrompt, userMessage) {
     ],
     tools: AI_TOOLS.openai,
     tool_choice: 'required',
-    temperature: 0.7,
+    temperature: 0.2,
     max_tokens: 16000
   });
-  
+
   const message = response.choices[0]?.message;
-  
+
   // Handle tool calls
   if (message?.tool_calls && message.tool_calls.length > 0) {
     const toolCall = message.tool_calls[0];
     const functionName = toolCall.function.name;
     const args = JSON.parse(toolCall.function.arguments);
-    
+
     return parseToolCall(functionName, args);
   }
-  
+
   // Fallback if no tool call (shouldn't happen with tool_choice: 'required')
   return {
     action: 'respond',
@@ -75,7 +75,7 @@ function parseToolCall(functionName, args) {
         updatedHtml: args.html,
         newPagePath: null
       };
-    
+
     case 'create_page':
       return {
         action: 'create',
@@ -83,7 +83,7 @@ function parseToolCall(functionName, args) {
         updatedHtml: args.html,
         newPagePath: args.path
       };
-    
+
     case 'respond':
     default:
       return {
