@@ -20,10 +20,10 @@ function getClient() {
  * Process a message using OpenAI with function calling
  * 
  * @param {string} systemPrompt - System prompt with context
- * @param {string} userMessage - User's message
- * @returns {Promise<{action: string, assistantMessage: string, updatedHtml: string | null, newPagePath: string | null}>}
+ * @param {Array<{role: string, content: string}>} conversationMessages - Full conversation history
+ * @returns {Promise<{action: string, assistantMessage: string, changes: Array|null, updatedHtml: string|null, newPagePath: string|null}>}
  */
-export async function processWithOpenAI(systemPrompt, userMessage) {
+export async function processWithOpenAI(systemPrompt, conversationMessages) {
   const client = getClient();
   const model = process.env.OPENAI_MODEL || 'gpt-4o';
 
@@ -31,13 +31,19 @@ export async function processWithOpenAI(systemPrompt, userMessage) {
     model,
     messages: [
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: userMessage }
+      ...conversationMessages
     ],
     tools: AI_TOOLS.openai,
     tool_choice: 'required',
     temperature: 0.2,
     max_tokens: 16000
   });
+
+  // Check for truncation
+  const finishReason = response.choices[0]?.finish_reason;
+  if (finishReason === 'length') {
+    throw new Error('AI response was truncated due to length limits. Please try a simpler request.');
+  }
 
   const message = response.choices[0]?.message;
 
@@ -54,6 +60,7 @@ export async function processWithOpenAI(systemPrompt, userMessage) {
   return {
     action: 'respond',
     assistantMessage: message?.content || 'I could not process your request.',
+    changes: null,
     updatedHtml: null,
     newPagePath: null
   };
@@ -64,7 +71,7 @@ export async function processWithOpenAI(systemPrompt, userMessage) {
  * 
  * @param {string} functionName - Name of the called function
  * @param {object} args - Function arguments
- * @returns {{action: string, assistantMessage: string, updatedHtml: string | null, newPagePath: string | null}}
+ * @returns {{action: string, assistantMessage: string, changes: Array|null, updatedHtml: string|null, newPagePath: string|null}}
  */
 function parseToolCall(functionName, args) {
   switch (functionName) {
@@ -72,7 +79,8 @@ function parseToolCall(functionName, args) {
       return {
         action: 'edit',
         assistantMessage: args.explanation,
-        updatedHtml: args.html,
+        changes: args.changes,
+        updatedHtml: null,
         newPagePath: null
       };
 
@@ -80,6 +88,7 @@ function parseToolCall(functionName, args) {
       return {
         action: 'create',
         assistantMessage: args.explanation,
+        changes: null,
         updatedHtml: args.html,
         newPagePath: args.path
       };
@@ -89,6 +98,7 @@ function parseToolCall(functionName, args) {
       return {
         action: 'respond',
         assistantMessage: args.message || args.explanation || '',
+        changes: null,
         updatedHtml: null,
         newPagePath: null
       };

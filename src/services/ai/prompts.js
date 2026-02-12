@@ -2,13 +2,35 @@
  * Tool definitions for AI function calling
  * These are used by both OpenAI and Anthropic
  */
+/**
+ * Shared schema fragments for the edit_page changes array
+ */
+const CHANGES_SCHEMA = {
+  type: 'array',
+  description: 'Ordered list of search-and-replace operations to apply to the current HTML',
+  items: {
+    type: 'object',
+    properties: {
+      search: {
+        type: 'string',
+        description: 'The exact HTML snippet to find in the current page (must match exactly, including whitespace and indentation)'
+      },
+      replace: {
+        type: 'string',
+        description: 'The HTML snippet to replace it with'
+      }
+    },
+    required: ['search', 'replace']
+  }
+};
+
 export const AI_TOOLS = {
   openai: [
     {
       type: 'function',
       function: {
         name: 'edit_page',
-        description: 'Edit the current page by updating its HTML content',
+        description: 'Edit the current page by applying targeted search-and-replace changes to its HTML',
         parameters: {
           type: 'object',
           properties: {
@@ -16,12 +38,9 @@ export const AI_TOOLS = {
               type: 'string',
               description: 'A brief explanation of what changes were made'
             },
-            html: {
-              type: 'string',
-              description: 'The complete updated HTML document'
-            }
+            changes: CHANGES_SCHEMA
           },
-          required: ['explanation', 'html']
+          required: ['explanation', 'changes']
         }
       }
     },
@@ -71,7 +90,7 @@ export const AI_TOOLS = {
   anthropic: [
     {
       name: 'edit_page',
-      description: 'Edit the current page by updating its HTML content',
+      description: 'Edit the current page by applying targeted search-and-replace changes to its HTML',
       input_schema: {
         type: 'object',
         properties: {
@@ -79,12 +98,9 @@ export const AI_TOOLS = {
             type: 'string',
             description: 'A brief explanation of what changes were made'
           },
-          html: {
-            type: 'string',
-            description: 'The complete updated HTML document'
-          }
+          changes: CHANGES_SCHEMA
         },
-        required: ['explanation', 'html']
+        required: ['explanation', 'changes']
       }
     },
     {
@@ -148,9 +164,30 @@ You are Capuzzella, an AI assistant that helps users build and edit their websit
 
 You MUST use one of these tools to respond:
 
-1. **edit_page**: Use this to modify the current page's HTML
-2. **create_page**: Use this to create a brand new page at a specified path
+1. **edit_page**: Use this to modify the current page by providing an array of search-and-replace changes. Each change has a \`search\` string (the exact HTML to find) and a \`replace\` string (the HTML to replace it with). Changes are applied in order.
+2. **create_page**: Use this to create a brand new page at a specified path. Provide the complete HTML document.
 3. **respond**: Use this when no page changes are needed (e.g., answering questions, clarifying requests)
+
+## How edit_page Works
+
+The edit_page tool uses a **search-and-replace** approach:
+- You provide an array of \`changes\`, each with \`search\` and \`replace\` fields.
+- The \`search\` field must contain an EXACT snippet from the current HTML (including whitespace and indentation).
+- The \`replace\` field contains the new HTML that will replace the matched snippet.
+- Only include enough context in \`search\` to uniquely identify the target location — do NOT include the entire document.
+- Changes are applied sequentially in the order you provide them.
+- To remove a section, set \`replace\` to an empty string.
+- To add new content, find the element just before or after where you want to insert, and include it in \`search\`, then include it plus the new content in \`replace\`.
+
+## Critical Rules
+
+- The \`search\` field MUST match the current HTML EXACTLY, including all whitespace, indentation, and line breaks.
+- Only include the minimal HTML snippet needed to uniquely locate the change. Do NOT include the entire document.
+- Make ONLY the changes the user requested. Do NOT alter, reformat, or remove anything else.
+- Do NOT remove or modify SVG icons, images, or their attributes unless explicitly asked.
+- Do NOT change Bootstrap classes on elements you were not asked to modify.
+- Do NOT remove HTML comments unless asked.
+- Preserve all whitespace and formatting in unchanged sections.
 
 ## Bootstrap CSS
 
@@ -182,11 +219,27 @@ Pages include Bootstrap CSS, a theme override, and Bootstrap JS via local asset 
 
 ## Creating New Pages
 
-When creating new pages:
+When creating new pages (use the create_page tool, NOT edit_page):
 - Use descriptive paths (e.g., "about.html", "services/consulting.html", "blog/my-first-post.html")
 - Include all necessary HTML structure (DOCTYPE, html, head with title, Bootstrap CSS link, body, Bootstrap JS script)
 - Include theme.css link after bootstrap.min.css in the head
 - Match the styling of existing pages when possible
 - Use Bootstrap components and utilities for all layout and styling
+
+## Example
+
+User request: "Change the hero heading to 'Welcome to My Site'"
+
+Correct edit_page tool call:
+- explanation: "Updated the hero heading text"
+- changes:
+  [
+    {
+      "search": "<h1 class=\\"display-3 fw-bold mb-4\\">\\n            A Website Builder like it's 2026!\\n          </h1>",
+      "replace": "<h1 class=\\"display-3 fw-bold mb-4\\">\\n            Welcome to My Site\\n          </h1>"
+    }
+  ]
+
+Notice: only the heading element is included — not the entire section or document. The search string matches the existing HTML exactly.
 `.trim();
 }

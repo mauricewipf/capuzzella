@@ -7,6 +7,32 @@ import { deletePage, getPage, listPages, savePage } from '../services/pages.js';
 const log = logger.child('api');
 
 /**
+ * Validate that HTML output from the AI has essential structure.
+ * 
+ * @param {string} html - The HTML to validate
+ * @returns {{ valid: boolean, reason?: string }}
+ */
+function validateHtml(html) {
+  if (!html || html.length < 50) {
+    return { valid: false, reason: 'HTML content is empty or too short' };
+  }
+
+  if (!html.toLowerCase().includes('<!doctype html>')) {
+    return { valid: false, reason: 'Missing <!DOCTYPE html> declaration' };
+  }
+
+  if (!html.includes('bootstrap.min.css')) {
+    return { valid: false, reason: 'Missing Bootstrap CSS reference (bootstrap.min.css)' };
+  }
+
+  if (!html.includes('theme.css')) {
+    return { valid: false, reason: 'Missing theme CSS reference (theme.css)' };
+  }
+
+  return { valid: true };
+}
+
+/**
  * API routes plugin for Elysia
  */
 export const apiRoutes = new Elysia({ prefix: '/api' })
@@ -26,7 +52,7 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
    * POST /api/chat - Process AI chat message for page editing or creation
    */
   .post('/chat', async ({ body, set }) => {
-    const { message, pagePath } = body;
+    const { message, pagePath, conversationId } = body;
 
     if (!message || !pagePath) {
       set.status = 400;
@@ -37,10 +63,21 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
       // Get current page content (may be null if page doesn't exist)
       const currentHtml = await getPage(pagePath);
 
-      const result = await processChat(message, currentHtml, pagePath);
+      const result = await processChat(message, currentHtml, pagePath, conversationId || null);
 
       // Handle different actions
       if (result.action === 'create' && result.newPagePath && result.updatedHtml) {
+        // Validate new page HTML before saving
+        const validation = validateHtml(result.updatedHtml);
+        if (!validation.valid) {
+          log.warn('AI produced invalid HTML for new page', { reason: validation.reason });
+          set.status = 422;
+          return {
+            error: `AI produced invalid HTML: ${validation.reason}`,
+            conversationId: result.conversationId
+          };
+        }
+
         // Create a new page
         await savePage(result.newPagePath, result.updatedHtml);
 
@@ -49,9 +86,21 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
           action: 'create',
           message: result.assistantMessage,
           updatedHtml: result.updatedHtml,
-          newPagePath: result.newPagePath
+          newPagePath: result.newPagePath,
+          conversationId: result.conversationId
         };
       } else if (result.action === 'edit' && result.updatedHtml) {
+        // Validate edited HTML before saving
+        const validation = validateHtml(result.updatedHtml);
+        if (!validation.valid) {
+          log.warn('AI produced invalid HTML after edit', { reason: validation.reason });
+          set.status = 422;
+          return {
+            error: `AI produced invalid HTML: ${validation.reason}`,
+            conversationId: result.conversationId
+          };
+        }
+
         // Edit the current page
         await savePage(pagePath, result.updatedHtml);
 
@@ -59,7 +108,8 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
           success: true,
           action: 'edit',
           message: result.assistantMessage,
-          updatedHtml: result.updatedHtml
+          updatedHtml: result.updatedHtml,
+          conversationId: result.conversationId
         };
       } else {
         // Just a response, no page changes
@@ -67,7 +117,8 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
           success: true,
           action: 'respond',
           message: result.assistantMessage,
-          updatedHtml: null
+          updatedHtml: null,
+          conversationId: result.conversationId
         };
       }
     } catch (error) {

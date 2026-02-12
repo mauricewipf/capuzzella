@@ -20,36 +20,41 @@ function getClient() {
  * Process a message using Anthropic with tool use
  * 
  * @param {string} systemPrompt - System prompt with context
- * @param {string} userMessage - User's message
- * @returns {Promise<{action: string, assistantMessage: string, updatedHtml: string | null, newPagePath: string | null}>}
+ * @param {Array<{role: string, content: string}>} conversationMessages - Full conversation history
+ * @returns {Promise<{action: string, assistantMessage: string, changes: Array|null, updatedHtml: string|null, newPagePath: string|null}>}
  */
-export async function processWithAnthropic(systemPrompt, userMessage) {
+export async function processWithAnthropic(systemPrompt, conversationMessages) {
   const client = getClient();
   const model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514';
-  
+
   const response = await client.messages.create({
     model,
     max_tokens: 16000,
+    temperature: 0.2,
     system: systemPrompt,
     tools: AI_TOOLS.anthropic,
     tool_choice: { type: 'any' },
-    messages: [
-      { role: 'user', content: userMessage }
-    ]
+    messages: conversationMessages
   });
-  
+
+  // Check for truncation
+  if (response.stop_reason === 'max_tokens') {
+    throw new Error('AI response was truncated due to length limits. Please try a simpler request.');
+  }
+
   // Find tool use in response
   const toolUse = response.content.find(block => block.type === 'tool_use');
-  
+
   if (toolUse) {
     return parseToolCall(toolUse.name, toolUse.input);
   }
-  
+
   // Fallback to text response (shouldn't happen with tool_choice: any)
   const textBlock = response.content.find(block => block.type === 'text');
   return {
     action: 'respond',
     assistantMessage: textBlock?.text || 'I could not process your request.',
+    changes: null,
     updatedHtml: null,
     newPagePath: null
   };
@@ -60,7 +65,7 @@ export async function processWithAnthropic(systemPrompt, userMessage) {
  * 
  * @param {string} toolName - Name of the called tool
  * @param {object} input - Tool input
- * @returns {{action: string, assistantMessage: string, updatedHtml: string | null, newPagePath: string | null}}
+ * @returns {{action: string, assistantMessage: string, changes: Array|null, updatedHtml: string|null, newPagePath: string|null}}
  */
 function parseToolCall(toolName, input) {
   switch (toolName) {
@@ -68,23 +73,26 @@ function parseToolCall(toolName, input) {
       return {
         action: 'edit',
         assistantMessage: input.explanation,
-        updatedHtml: input.html,
+        changes: input.changes,
+        updatedHtml: null,
         newPagePath: null
       };
-    
+
     case 'create_page':
       return {
         action: 'create',
         assistantMessage: input.explanation,
+        changes: null,
         updatedHtml: input.html,
         newPagePath: input.path
       };
-    
+
     case 'respond':
     default:
       return {
         action: 'respond',
         assistantMessage: input.message || input.explanation || '',
+        changes: null,
         updatedHtml: null,
         newPagePath: null
       };

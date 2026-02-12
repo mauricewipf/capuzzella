@@ -13,6 +13,7 @@
 
   let messages = [];
   let isLoading = false;
+  let conversationId = null;
   let publishStatus = {
     isPublished: false,
     hasUnpublishedChanges: false
@@ -267,19 +268,29 @@
     setLoading(true);
 
     try {
+      const requestBody = {
+        message,
+        pagePath: PAGE_PATH
+      };
+      if (conversationId) {
+        requestBody.conversationId = conversationId;
+      }
+
       const response = await fetch(`${API_BASE}/chat`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          message,
-          pagePath: PAGE_PATH
-        })
+        body: JSON.stringify(requestBody)
       });
 
       const data = await response.json();
+
+      // Store conversation ID for subsequent requests
+      if (data.conversationId) {
+        conversationId = data.conversationId;
+      }
 
       if (!response.ok) {
         const errorMessage = data.error || 'Unknown server error';
