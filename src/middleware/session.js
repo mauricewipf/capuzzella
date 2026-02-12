@@ -170,16 +170,16 @@ function getSessionIdFromCookie(cookie) {
  * Create a session cookie string
  */
 export function createSessionCookie(sessionId) {
-  const secure = process.env.NODE_ENV === 'production';
+  const insecure = process.env.NODE_ENV === 'development';
   const parts = [
     `${SESSION_COOKIE_NAME}=${sessionId}`,
     'Path=/',
     'HttpOnly',
     `Max-Age=${Math.floor(SESSION_MAX_AGE / 1000)}`,
-    'SameSite=Lax'
+    'SameSite=Strict'
   ];
 
-  if (secure) {
+  if (!insecure) {
     parts.push('Secure');
   }
 

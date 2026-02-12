@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "bun run src/server.js",
+    "start:prod": "NODE_ENV=production bun run src/server.js",
     "dev": "bun --watch run src/server.js",
     "generate:secret": "openssl rand -hex 32",
     "copy:bootstrap": "cp node_modules/bootstrap/dist/css/bootstrap.min.css drafts/assets/css/bootstrap.min.css && cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js drafts/assets/js/bootstrap.bundle.min.js",
