@@ -27,9 +27,9 @@ export function requestLoggerPlugin(app) {
       // Stash the start time so we can measure duration in onAfterResponse
       store.requestStart = performance.now();
     })
-    .onAfterResponse(({ request, store, set }) => {
-      const url = new URL(request.url);
-      const path = url.pathname;
+    .onAfterResponse(({ request, path: reqPath, store, set }) => {
+      // Use the path from context (always available) instead of parsing request.url
+      const path = reqPath || '/';
 
       // Skip health checks — they add noise and are called frequently
       if (path === '/health') return;
@@ -47,5 +47,8 @@ export function requestLoggerPlugin(app) {
       } else {
         log.info(message, { method, path, status, durationMs: Number(durationMs) });
       }
-    });
+    })
+    // Propagate hooks to the parent app — without this, Elysia scopes them
+    // to routes registered inside this plugin only (of which there are none).
+    .as('plugin');
 }
