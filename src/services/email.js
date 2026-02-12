@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { escapeHtml } from '../lib/escape-html.js';
 import { logger } from '../lib/logger.js';
 
 const log = logger.child('email');
@@ -76,13 +77,3 @@ function formatLabel(key) {
     .replace(/\b\w/g, (c) => c.toUpperCase()); // capitalise first letters
 }
 
-/**
- * Escape HTML special characters to prevent XSS in email body.
- */
-function escapeHtml(str) {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}

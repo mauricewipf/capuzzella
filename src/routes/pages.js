@@ -2,6 +2,7 @@ import { Elysia } from 'elysia';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { escapeHtml } from '../lib/escape-html.js';
 import { logger } from '../lib/logger.js';
 import { requireAuth } from '../middleware/auth.js';
 import { listPages } from '../services/pages.js';
@@ -51,19 +52,6 @@ function getStatusBadge(page) {
     return '<span class="badge text-bg-success">Published</span>';
   }
   return '<span class="badge text-bg-secondary">Draft</span>';
-}
-
-/**
- * Escape HTML to prevent XSS
- */
-function escapeHtml(text) {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }
 
 /**

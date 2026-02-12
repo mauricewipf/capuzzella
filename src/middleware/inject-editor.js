@@ -1,3 +1,5 @@
+import { escapeHtml } from '../lib/escape-html.js';
+
 /**
  * Inject the Capuzzella editor UI into an HTML page
  * Creates a split-pane layout with iframe content on the left and chat sidebar on the right
@@ -18,13 +20,13 @@ export function injectEditor(html, pagePath) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edit: ${pagePath}</title>
+  <title>Edit: ${escapeHtml(pagePath)}</title>
   <link href="/static/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="h-100 overflow-hidden">
   <div class="d-flex vh-100 vw-100">
     <iframe id="capuzzella-iframe" class="flex-grow-1 border-0 h-100 min-vw-0" srcdoc="${escapedHtml}"></iframe>
-    <div id="capuzzella-editor" class="d-flex flex-column flex-shrink-0 h-100 bg-dark border-start border-secondary overflow-hidden" style="width: 400px;" data-page-path="${pagePath}">
+    <div id="capuzzella-editor" class="d-flex flex-column flex-shrink-0 h-100 bg-dark border-start border-secondary overflow-hidden" style="width: 400px;" data-page-path="${escapeHtml(pagePath)}">
       <!-- Editor UI will be initialized by editor.js -->
     </div>
   </div>

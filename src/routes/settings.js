@@ -1,22 +1,10 @@
 import { Elysia } from 'elysia';
+import { escapeHtml } from '../lib/escape-html.js';
 import { logger } from '../lib/logger.js';
 import { createSessionCookie, saveSession } from '../middleware/session.js';
 import { updatePassword } from '../services/auth.js';
 
 const log = logger.child('settings');
-
-/**
- * Escape HTML to prevent XSS
- */
-function escapeHtml(text) {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
 
 /**
  * Settings routes plugin for Elysia
