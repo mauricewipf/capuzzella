@@ -21,6 +21,7 @@ const PUBLIC_DIR = path.join(__dirname, '../../public');
 const DATA_DIR = path.join(__dirname, '../../data');
 const DRAFTS_ASSETS_DIR = path.join(DRAFTS_DIR, 'assets');
 const PUBLIC_ASSETS_DIR = path.join(PUBLIC_DIR, 'assets');
+const MD_FINGERPRINT_LENGTH = 8;
 
 /**
  * Recursively list all file paths under dir, relative to dir
@@ -55,7 +56,7 @@ function fingerprintedName(relativePath, hash) {
 }
 
 /**
- * Publish all drafts/assets/ files to public/assets/ with MD5 fingerprints.
+ * Publish all drafts/assets/ files to public/assets/ with shortened MD5 fingerprints.
  * For each file: copy as <name>.<hash>.<ext> and create a Brotli-compressed .br version.
  * Existing .br files from drafts are skipped (regenerated from the source).
  */
@@ -76,7 +77,11 @@ async function publishDraftAssets() {
 
     const fullPath = path.join(DRAFTS_ASSETS_DIR, rel);
     const content = await fs.readFile(fullPath);
-    const hash = crypto.createHash('md5').update(content).digest('hex');
+    const hash = crypto
+      .createHash('md5')
+      .update(content)
+      .digest('hex')
+      .slice(0, MD_FINGERPRINT_LENGTH);
     hashByBasePath.set(rel, hash);
 
     const outName = fingerprintedName(rel, hash);

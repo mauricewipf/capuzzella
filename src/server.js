@@ -67,10 +67,10 @@ function getMimeType(filepath) {
 }
 
 /**
- * Check if a file path contains a fingerprint hash (e.g. bootstrap.min.1b1cb0e2be...css)
+ * Check if a file path contains a fingerprint hash (e.g. bootstrap.min.1b1cb0e2.css)
  */
 function isFingerprintedAsset(filepath) {
-  return /\.[a-f0-9]{16,}\.\w+$/.test(path.basename(filepath));
+  return /\.[a-f0-9]{8,}\.\w+$/.test(path.basename(filepath));
 }
 
 /**
