@@ -220,6 +220,7 @@ export function sessionPlugin(app) {
       // Track if session was modified
       let isModified = false;
       let isDestroyed = false;
+      let isExplicitlySaved = false;
 
       // Create session proxy for easy access
       const session = new Proxy(sessionData, {
@@ -232,14 +233,13 @@ export function sessionPlugin(app) {
           }
           if (prop === 'save') {
             return () => {
-              if (!isDestroyed) {
-                saveSession(sessionId, sessionData);
-              }
+              isExplicitlySaved = !isDestroyed;
             };
           }
           if (prop === '_isNew') return isNew;
           if (prop === '_isModified') return isModified;
           if (prop === '_isDestroyed') return isDestroyed;
+          if (prop === '_isExplicitlySaved') return isExplicitlySaved;
           if (prop === '_sessionId') return sessionId;
           if (prop === '_getData') return () => sessionData;
           return target[prop];
@@ -259,8 +259,8 @@ export function sessionPlugin(app) {
       return { session };
     })
     .onAfterHandle(({ session, set }) => {
-      // Save session if modified
-      if (!session._isDestroyed && (session._isNew || session._isModified)) {
+      // Persist and set cookie only when session state changes or an explicit save is requested
+      if (!session._isDestroyed && (session._isModified || session._isExplicitlySaved)) {
         // Use _getData() to get the underlying data object, avoiding proxy spread issues
         saveSession(session._sessionId, session._getData());
         set.headers['Set-Cookie'] = createSessionCookie(session._sessionId);
