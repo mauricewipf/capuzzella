@@ -14,6 +14,7 @@ export function injectEditor(html, pagePath, csrfToken) {
   const escapedHtml = html
     .replace(/&/g, '&amp;')
     .replace(/"/g, '&quot;');
+  const iframeSandbox = 'allow-scripts allow-same-origin allow-forms';
 
   // Create a complete editor shell page with iframe
   return `<!DOCTYPE html>
@@ -26,7 +27,7 @@ export function injectEditor(html, pagePath, csrfToken) {
 </head>
 <body class="h-100 overflow-hidden">
   <div class="d-flex vh-100 vw-100">
-    <iframe id="capuzzella-iframe" class="flex-grow-1 border-0 h-100 min-vw-0" srcdoc="${escapedHtml}"></iframe>
+    <iframe id="capuzzella-iframe" class="flex-grow-1 border-0 h-100 min-vw-0" sandbox="${iframeSandbox}" srcdoc="${escapedHtml}"></iframe>
     <div id="capuzzella-editor" class="d-flex flex-column flex-shrink-0 h-100 bg-dark border-start border-secondary overflow-hidden" style="width: 400px;" data-page-path="${escapeHtml(pagePath)}" data-csrf-token="${escapeHtml(csrfToken)}">
       <!-- Editor UI will be initialized by editor.js -->
     </div>
