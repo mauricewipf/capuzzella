@@ -25,6 +25,20 @@ const __dirname = path.dirname(__filename);
 
 const PORT = process.env.PORT || 3000;
 
+const BASE_CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "base-uri 'none'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  "frame-src 'self'",
+  "img-src 'self' data:",
+  "font-src 'self' data:",
+  "connect-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'"
+].join('; ');
+
 // Static file directories
 const PUBLIC_DIR = path.join(__dirname, '../public');
 const DRAFTS_DIR = path.join(__dirname, '../drafts');
@@ -207,6 +221,7 @@ const app = new Elysia()
     set.headers['X-Content-Type-Options'] = 'nosniff';
     set.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin';
     set.headers['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=()';
+    set.headers['Content-Security-Policy'] = BASE_CONTENT_SECURITY_POLICY;
     if (process.env.NODE_ENV === 'production') {
       set.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
     }
