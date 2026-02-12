@@ -61,6 +61,13 @@ function getMimeType(filepath) {
 }
 
 /**
+ * Check if a file path contains a fingerprint hash (e.g. bootstrap.min.1b1cb0e2be...css)
+ */
+function isFingerprintedAsset(filepath) {
+  return /\.[a-f0-9]{16,}\.\w+$/.test(path.basename(filepath));
+}
+
+/**
  * Serve a pre-compressed Brotli (.br) file when available and the client accepts it.
  * Returns null if no .br file exists or the client doesn't accept Brotli.
  */
@@ -71,13 +78,17 @@ async function serveStaticFileWithBr(filepath, request) {
   const brFile = Bun.file(filepath + '.br');
   if (!(await brFile.exists())) return null;
 
-  return new Response(brFile, {
-    headers: {
-      'Content-Type': getMimeType(filepath),
-      'Content-Encoding': 'br',
-      'Vary': 'Accept-Encoding'
-    }
-  });
+  const headers = {
+    'Content-Type': getMimeType(filepath),
+    'Content-Encoding': 'br',
+    'Vary': 'Accept-Encoding'
+  };
+
+  if (isFingerprintedAsset(filepath)) {
+    headers['Cache-Control'] = 'public, max-age=31536000, immutable';
+  }
+
+  return new Response(brFile, { headers });
 }
 
 /**
@@ -87,9 +98,13 @@ async function serveStaticFile(filepath) {
   const file = Bun.file(filepath);
 
   if (await file.exists()) {
-    return new Response(file, {
-      headers: { 'Content-Type': getMimeType(filepath) }
-    });
+    const headers = { 'Content-Type': getMimeType(filepath) };
+
+    if (isFingerprintedAsset(filepath)) {
+      headers['Cache-Control'] = 'public, max-age=31536000, immutable';
+    }
+
+    return new Response(file, { headers });
   }
 
   return null;
@@ -106,7 +121,10 @@ async function servePublicHtml(filepath) {
   const rewritten = rewriteAssetPaths(html);
 
   return new Response(rewritten, {
-    headers: { 'Content-Type': 'text/html' }
+    headers: {
+      'Content-Type': 'text/html',
+      'Cache-Control': 'no-cache'
+    }
   });
 }
 
