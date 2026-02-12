@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia';
 import { logger } from '../lib/logger.js';
+import { getClientIp } from '../lib/get-client-ip.js';
 import { createClearSessionCookie, createSessionCookie, saveSession } from '../middleware/session.js';
 import { authenticateUser } from '../services/auth.js';
 
@@ -98,8 +99,8 @@ export const authRoutes = new Elysia({ prefix: '/auth' })
   /**
    * POST /auth/login - Handle login
    */
-  .post('/login', async ({ body, session, set, request }) => {
-    const ip = request.headers.get('x-real-ip') || 'unknown';
+  .post('/login', async ({ body, session, set, request, server }) => {
+    const ip = getClientIp(request, server);
 
     // Check rate limit before attempting authentication
     if (isLoginRateLimited(ip)) {

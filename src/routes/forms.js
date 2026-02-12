@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia';
 import { logger } from '../lib/logger.js';
+import { getClientIp } from '../lib/get-client-ip.js';
 import { sendContactEmail } from '../services/email.js';
 
 const log = logger.child('forms');
@@ -66,7 +67,7 @@ export const formRoutes = new Elysia({ prefix: '/api' })
   /**
    * POST /api/contact - Handle contact form submissions
    */
-  .post('/form', async ({ body, set, request }) => {
+  .post('/form', async ({ body, set, request, server }) => {
     // Body must be a non-null object
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
       set.status = 400;
@@ -114,10 +115,7 @@ export const formRoutes = new Elysia({ prefix: '/api' })
     }
 
     // Rate limiting
-    const ip =
-      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-      request.headers.get('x-real-ip') ||
-      'unknown';
+    const ip = getClientIp(request, server);
 
     if (isRateLimited(ip)) {
       log.warn('Rate limit exceeded', { ip });
