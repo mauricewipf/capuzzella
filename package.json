@@ -9,7 +9,7 @@
     "start:prod": "NODE_ENV=production bun run src/server.js",
     "dev": "bun --watch run src/server.js",
     "generate:secret": "openssl rand -hex 32",
-    "copy:bootstrap": "cp node_modules/bootstrap/dist/css/bootstrap.min.css drafts/assets/css/bootstrap.min.css && cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js drafts/assets/js/bootstrap.bundle.min.js",
+    "copy:bootstrap": "cp node_modules/bootstrap/dist/css/bootstrap.min.css drafts/assets/css/bootstrap.min.css && cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js drafts/assets/js/bootstrap.bundle.min.js && cp node_modules/bootstrap/dist/css/bootstrap.min.css static/assets/css/bootstrap.min.css && cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js static/assets/js/bootstrap.bundle.min.js",
     "docker:start": "docker compose build --no-cache && docker compose up -d"
   },
   "keywords": [
