@@ -201,6 +201,17 @@ const app = new Elysia()
   // HTTP request logging
   .use(requestLoggerPlugin)
 
+  // Security headers
+  .onAfterHandle(({ set }) => {
+    set.headers['X-Frame-Options'] = 'DENY';
+    set.headers['X-Content-Type-Options'] = 'nosniff';
+    set.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin';
+    set.headers['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=()';
+    if (process.env.NODE_ENV === 'production') {
+      set.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
+    }
+  })
+
   // Health check endpoint
   .get('/health', () => 'ok')
 
