@@ -183,11 +183,8 @@ const app = new Elysia()
   // Add session support
   .use(sessionPlugin)
 
-  // Test route
-  .get('/test', () => {
-    console.log('Test route called');
-    return 'Test works!';
-  })
+  // Health check endpoint
+  .get('/health', () => 'ok')
 
   // Register route plugins FIRST (before any wildcards)
   .use(apiRoutes)
