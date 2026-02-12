@@ -29,8 +29,9 @@ export const designSystemRoutes = new Elysia({ prefix: '/design-system' })
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Design System - Capuzzella</title>
-        <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
-        <script src="/assets/js/bootstrap.bundle.min.js"></script>
+        <link rel="stylesheet" href="/assets/css/bootstrap.min.css?source=draft">
+        <link rel="stylesheet" href="/assets/css/theme.css?source=draft">
+        <script src="/assets/js/bootstrap.bundle.min.js?source=draft" defer></script>
       </head>
       <body class="bg-body-tertiary">
         <div class="container py-5" style="max-width: 900px;">
