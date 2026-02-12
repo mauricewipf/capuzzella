@@ -43,6 +43,25 @@ export const settingsRoutes = new Elysia({ prefix: '/settings' })
     const message = query.message;
     const error = query.error;
 
+    // AI provider configuration status
+    const aiProvider = process.env.AI_PROVIDER || 'openai';
+    const providers = [
+      {
+        name: 'OpenAI',
+        id: 'openai',
+        configured: !!process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-'),
+        model: process.env.OPENAI_MODEL || 'gpt-4o',
+        active: aiProvider === 'openai',
+      },
+      {
+        name: 'Anthropic',
+        id: 'anthropic',
+        configured: !!process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY.startsWith('sk-ant-'),
+        model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514',
+        active: aiProvider === 'anthropic',
+      },
+    ];
+
     set.headers['Content-Type'] = 'text/html';
     return `
       <!DOCTYPE html>
@@ -81,6 +100,26 @@ export const settingsRoutes = new Elysia({ prefix: '/settings' })
             <div class="card-body">
               <h2 class="h5 card-title mb-3">Account Information</h2>
               <p class="text-body-secondary mb-0"><span class="fw-medium">Username:</span> ${escapeHtml(session.username)}</p>
+            </div>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-body">
+              <h2 class="h5 card-title mb-3">AI Providers</h2>
+              ${providers.map((p, i) => `
+                <div class="d-flex justify-content-between align-items-center py-2${i < providers.length - 1 ? ' border-bottom' : ''}">
+                  <div>
+                    <span class="fw-medium">${escapeHtml(p.name)}</span>
+                    ${p.active ? '<span class="badge bg-primary ms-2">Active</span>' : ''}
+                  </div>
+                  <div>
+                    <span class="text-body-secondary me-3">${escapeHtml(p.model)}</span>
+                    ${p.configured
+        ? '<span class="badge bg-success">Configured</span>'
+        : '<span class="badge bg-danger">No API key configured</span>'}
+                  </div>
+                </div>
+              `).join('')}
             </div>
           </div>
 
