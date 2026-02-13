@@ -2,9 +2,9 @@ import { Elysia } from 'elysia';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { safePath, PathTraversalError } from './lib/safe-path.js';
 import { getDb } from './db/index.js';
 import { logger } from './lib/logger.js';
+import { PathTraversalError, safePath } from './lib/safe-path.js';
 import { requestLoggerPlugin } from './middleware/request-logger.js';
 import { initSessionTable, sessionPlugin, startSessionCleanup } from './middleware/session.js';
 import { handleDraftPreview, handleEditMode } from './routes/preview.js';
@@ -13,8 +13,8 @@ import { loadManifest, rewriteAssetPaths } from './services/asset-manifest.js';
 // Import route plugins
 import { apiRoutes } from './routes/api.js';
 import { authRoutes } from './routes/auth.js';
-import { formRoutes } from './routes/forms.js';
 import { designSystemRoutes } from './routes/design-system.js';
+import { formRoutes } from './routes/forms.js';
 import { pagesRoutes } from './routes/pages.js';
 import { publishRoutes } from './routes/publish.js';
 import { settingsRoutes } from './routes/settings.js';
@@ -33,7 +33,7 @@ const BASE_CONTENT_SECURITY_POLICY = [
   "frame-ancestors 'none'",
   "form-action 'self'",
   "frame-src 'self'",
-  "img-src 'self' data:",
+  "img-src 'self' data: https:", // ACCEPTED RISK: Allow external HTTPS images (e.g. placehold.co in design-system)
   "font-src 'self' data:",
   "connect-src 'self'",
   "script-src 'self' 'unsafe-inline'",
