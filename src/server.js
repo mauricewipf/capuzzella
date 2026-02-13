@@ -2,6 +2,7 @@ import { Elysia } from 'elysia';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import { safePath, PathTraversalError } from './lib/safe-path.js';
 import { getDb } from './db/index.js';
 import { logger } from './lib/logger.js';
 import { requestLoggerPlugin } from './middleware/request-logger.js';
@@ -152,56 +153,68 @@ async function servePublicHtml(filepath) {
  * Try to serve static files
  */
 async function tryServeStatic(reqPath, request) {
-  // Serve editor assets from /editor/*
-  if (reqPath.startsWith('/editor/')) {
-    const filepath = path.join(EDITOR_DIR, reqPath.slice(8));
-    return await serveStaticFile(filepath);
-  }
-
-  // Serve admin UI assets from /static/*
-  if (reqPath.startsWith('/static/')) {
-    const filepath = path.join(STATIC_DIR, reqPath.slice(8));
-    return await serveStaticFile(filepath);
-  }
-
-  // Serve assets: ?source=draft → drafts/assets/, otherwise → public/assets/
-  const assetsMatch = reqPath.match(/^\/assets\/(.+)$/);
-  if (assetsMatch) {
-    const url = new URL(request.url);
-    if (url.searchParams.get('source') === 'draft') {
-      const draftAssetPath = path.join(DRAFTS_DIR, 'assets', assetsMatch[1]);
-      const brResponse = await serveStaticFileWithBr(draftAssetPath, request);
-      if (brResponse) return brResponse;
-      return await serveStaticFile(draftAssetPath);
+  try {
+    // Serve editor assets from /editor/*
+    if (reqPath.startsWith('/editor/')) {
+      // reqPath.slice(8) removes '/editor/'
+      const filepath = safePath(EDITOR_DIR, reqPath.slice(8));
+      return await serveStaticFile(filepath);
     }
 
-    // Public assets (fingerprinted) — fall through to public directory handling below
-  }
+    // Serve admin UI assets from /static/*
+    if (reqPath.startsWith('/static/')) {
+      // reqPath.slice(8) removes '/static/'
+      const filepath = safePath(STATIC_DIR, reqPath.slice(8));
+      return await serveStaticFile(filepath);
+    }
 
-  // Serve static files from public directory
-  let staticPath = reqPath;
+    // Serve assets: ?source=draft → drafts/assets/, otherwise → public/assets/
+    const assetsMatch = reqPath.match(/^\/assets\/(.+)$/);
+    if (assetsMatch) {
+      const url = new URL(request.url);
+      if (url.searchParams.get('source') === 'draft') {
+        const draftAssetPath = safePath(path.join(DRAFTS_DIR, 'assets'), assetsMatch[1]);
+        const brResponse = await serveStaticFileWithBr(draftAssetPath, request);
+        if (brResponse) return brResponse;
+        return await serveStaticFile(draftAssetPath);
+      }
 
-  // Default to index.html for root
-  if (staticPath === '/') {
-    staticPath = '/index.html';
-  }
+      // Public assets (fingerprinted) — fall through to public directory handling below
+    }
 
-  // Try exact path first
-  const publicFilePath = path.join(PUBLIC_DIR, staticPath);
-  if (publicFilePath.endsWith('.html')) {
-    // HTML from public/ gets asset paths rewritten via the manifest
-    const htmlResponse = await servePublicHtml(publicFilePath);
-    if (htmlResponse) return htmlResponse;
-  } else {
-    const brResponse = await serveStaticFileWithBr(publicFilePath, request);
-    const response = brResponse || (await serveStaticFile(publicFilePath));
-    if (response) return response;
-  }
+    // Serve static files from public directory
+    let staticPath = reqPath;
 
-  // Try adding .html extension
-  if (!staticPath.endsWith('.html')) {
-    const htmlPath = path.join(PUBLIC_DIR, staticPath + '.html');
-    return await servePublicHtml(htmlPath);
+    // Default to index.html for root
+    if (staticPath === '/') {
+      staticPath = '/index.html';
+    }
+
+    // For safePath, we need a relative path. staticPath starts with '/'.
+    const relativeStaticPath = staticPath.startsWith('/') ? staticPath.slice(1) : staticPath;
+
+    // Try exact path first
+    const publicFilePath = safePath(PUBLIC_DIR, relativeStaticPath);
+    if (publicFilePath.endsWith('.html')) {
+      // HTML from public/ gets asset paths rewritten via the manifest
+      const htmlResponse = await servePublicHtml(publicFilePath);
+      if (htmlResponse) return htmlResponse;
+    } else {
+      const brResponse = await serveStaticFileWithBr(publicFilePath, request);
+      const response = brResponse || (await serveStaticFile(publicFilePath));
+      if (response) return response;
+    }
+
+    // Try adding .html extension
+    if (!staticPath.endsWith('.html')) {
+      const htmlPath = safePath(PUBLIC_DIR, relativeStaticPath + '.html');
+      return await servePublicHtml(htmlPath);
+    }
+  } catch (error) {
+    if (error instanceof PathTraversalError) {
+      return null;
+    }
+    throw error;
   }
 
   return null;
