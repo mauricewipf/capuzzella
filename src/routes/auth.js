@@ -9,9 +9,10 @@ const log = logger.child('auth');
 
 /**
  * In-memory rate limiter for login attempts.
- * Tracks failed login timestamps per IP and rejects if the limit is exceeded.
+ * Tracks failed login timestamps per IP and Username to prevent brute-force attacks.
  */
 const loginAttemptMap = new Map();
+const userLoginAttemptMap = new Map(); // New map for user-based limiting
 const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 const LOGIN_MAX_ATTEMPTS = 5;
 
@@ -23,6 +24,14 @@ function isLoginRateLimited(ip) {
   return recent.length >= LOGIN_MAX_ATTEMPTS;
 }
 
+function isUserLoginRateLimited(username) {
+  const now = Date.now();
+  const timestamps = userLoginAttemptMap.get(username) || [];
+  const recent = timestamps.filter((t) => now - t < LOGIN_WINDOW_MS);
+  userLoginAttemptMap.set(username, recent);
+  return recent.length >= LOGIN_MAX_ATTEMPTS;
+}
+
 function recordFailedLogin(ip) {
   const now = Date.now();
   const timestamps = loginAttemptMap.get(ip) || [];
@@ -30,19 +39,42 @@ function recordFailedLogin(ip) {
   loginAttemptMap.set(ip, timestamps);
 }
 
+function recordFailedUserLogin(username) {
+  const now = Date.now();
+  const timestamps = userLoginAttemptMap.get(username) || [];
+  timestamps.push(now);
+  userLoginAttemptMap.set(username, timestamps);
+}
+
 function clearLoginAttempts(ip) {
   loginAttemptMap.delete(ip);
+}
+
+function clearUserLoginAttempts(username) {
+  userLoginAttemptMap.delete(username);
 }
 
 // Periodically clean up stale entries (every 30 minutes)
 setInterval(() => {
   const now = Date.now();
+  
+  // Cleanup IP map
   for (const [ip, timestamps] of loginAttemptMap) {
     const recent = timestamps.filter((t) => now - t < LOGIN_WINDOW_MS);
     if (recent.length === 0) {
       loginAttemptMap.delete(ip);
     } else {
       loginAttemptMap.set(ip, recent);
+    }
+  }
+
+  // Cleanup User map
+  for (const [username, timestamps] of userLoginAttemptMap) {
+    const recent = timestamps.filter((t) => now - t < LOGIN_WINDOW_MS);
+    if (recent.length === 0) {
+      userLoginAttemptMap.delete(username);
+    } else {
+      userLoginAttemptMap.set(username, recent);
     }
   }
 }, 30 * 60 * 1000);
@@ -105,25 +137,38 @@ export const authRoutes = new Elysia({ prefix: '/auth' })
    */
   .post('/login', async ({ body, session, set, request, server }) => {
     const ip = getClientIp(request, server);
+    const { username, password } = body;
 
-    // Check rate limit before attempting authentication
+    // Check IP rate limit
     if (isLoginRateLimited(ip)) {
-      log.warn('Login rate limit exceeded', { ip });
+      log.warn('Login rate limit exceeded (IP)', { ip });
       set.status = 429;
-      return 'Too many login attempts. Please try again later.';
+      return 'Too many login attempts from this IP. Please try again later.';
     }
 
-    const { username, password } = body;
+    // Check User rate limit
+    if (username && isUserLoginRateLimited(username)) {
+      log.warn('Login rate limit exceeded (User)', { username, ip });
+      set.status = 429;
+      return 'Too many login attempts for this account. Please try again later.';
+    }
 
     try {
       const user = await authenticateUser(username, password);
 
       if (user) {
-        // Successful login — clear failed attempt counter
+        // Successful login — clear failed attempt counters
         clearLoginAttempts(ip);
+        clearUserLoginAttempts(username);
 
         // Preserve returnTo before regenerating the session
-        const returnTo = session.returnTo || '/';
+        let returnTo = session.returnTo || '/';
+
+        // Open Redirect Prevention: Ensure returnTo is a relative path
+        if (!returnTo.startsWith('/') || returnTo.startsWith('//') || returnTo.startsWith('/\\')) {
+          log.warn('Invalid returnTo URL detected, resetting to /', { returnTo });
+          returnTo = '/';
+        }
 
         // Regenerate session ID to prevent session fixation attacks
         const oldSessionId = session._sessionId;
@@ -157,6 +202,10 @@ export const authRoutes = new Elysia({ prefix: '/auth' })
 
       // Failed login — record the attempt
       recordFailedLogin(ip);
+      if (username) {
+        recordFailedUserLogin(username);
+      }
+      
       set.status = 401;
       return 'Invalid credentials';
     } catch (error) {

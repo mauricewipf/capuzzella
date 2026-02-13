@@ -1,6 +1,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { Elysia } from 'elysia';
+import sanitizeHtml from 'sanitize-html';
 import { logger } from '../lib/logger.js';
 import { safePath, PathTraversalError } from '../lib/safe-path.js';
 import { requireAuth, requirePasswordChanged } from '../middleware/auth.js';
@@ -13,6 +14,37 @@ const __dirname = path.dirname(__filename);
 const DRAFTS_DIR = path.join(__dirname, '../../drafts');
 
 const log = logger.child('api');
+
+const SANITIZER_OPTIONS = {
+  allowedTags: [
+    "html", "head", "body", "meta", "title", "link", "style",
+    "address", "article", "aside", "footer", "header", "h1", "h2", "h3", "h4",
+    "h5", "h6", "hgroup", "main", "nav", "section", "blockquote", "dd", "div",
+    "dl", "dt", "figcaption", "figure", "hr", "li", "main", "ol", "p", "pre",
+    "ul", "a", "abbr", "b", "bdi", "bdo", "br", "cite", "code", "data", "dfn",
+    "em", "i", "kbd", "mark", "q", "rb", "rp", "rt", "rtc", "ruby", "s", "samp",
+    "small", "span", "strong", "sub", "sup", "time", "u", "var", "wbr", "caption",
+    "col", "colgroup", "table", "tbody", "td", "tfoot", "th", "thead", "tr",
+    "img", "button", "input", "label", "select", "option", "textarea", "form"
+  ],
+  allowedAttributes: {
+    '*': ['class', 'style', 'id', 'data-*', 'role', 'aria-*', 'title', 'lang', 'dir'],
+    'a': ['href', 'name', 'target', 'rel'],
+    'img': ['src', 'srcset', 'alt', 'width', 'height', 'loading'],
+    'input': ['type', 'name', 'value', 'placeholder', 'required', 'checked', 'readonly', 'disabled'],
+    'button': ['type', 'name', 'disabled'],
+    'form': ['action', 'method'],
+    'label': ['for'],
+    'select': ['name', 'multiple', 'required', 'disabled'],
+    'option': ['value', 'selected', 'disabled'],
+    'textarea': ['name', 'rows', 'cols', 'placeholder', 'required', 'disabled', 'readonly'],
+    'link': ['rel', 'href', 'type', 'media', 'crossorigin', 'integrity'],
+    'meta': ['name', 'content', 'charset', 'http-equiv', 'property'],
+    'html': ['lang'],
+    'body': ['class']
+  },
+  allowedSchemes: ['http', 'https', 'mailto', 'tel', 'data']
+};
 
 /**
  * Validate that HTML output from the AI has essential structure.
@@ -86,6 +118,11 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
       const currentHtml = await getPage(pagePath);
 
       const result = await processChat(message, currentHtml, pagePath, conversationId || null);
+
+      // Sanitize AI output to prevent Stored XSS
+      if (result.updatedHtml) {
+        result.updatedHtml = sanitizeHtml(result.updatedHtml, SANITIZER_OPTIONS);
+      }
 
       // Handle different actions
       if (result.action === 'create' && result.newPagePath && result.updatedHtml) {
@@ -227,6 +264,9 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
       return { error: 'HTML content is required' };
     }
 
+    // Sanitize HTML input to prevent Stored XSS
+    const sanitizedHtml = sanitizeHtml(html, SANITIZER_OPTIONS);
+
     // Defense-in-depth: validate path at the route level too
     try {
       safePath(DRAFTS_DIR, pagePath);
@@ -239,7 +279,7 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
     }
 
     try {
-      await savePage(pagePath, html);
+      await savePage(pagePath, sanitizedHtml);
       return { success: true };
     } catch (error) {
       log.error('Save page error', { error: error.message });
