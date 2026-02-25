@@ -62,6 +62,18 @@
   }
 
   /**
+   * Append ?source=draft to asset paths so the server serves files from
+   * drafts/assets/ instead of public/assets/. Mirrors the server-side
+   * rewriteDraftAssetPaths() from preview.js.
+   */
+  function rewriteDraftAssetPaths(html) {
+    return html.replace(
+      /((?:href|src)\s*=\s*["'])((?:\/)?assets\/[^"'?]+)(["'])/gi,
+      '$1$2?source=draft$3'
+    );
+  }
+
+  /**
    * Update page content by updating the iframe's srcdoc
    * This provides complete isolation and handles scripts/styles automatically
    * 
@@ -74,8 +86,11 @@
       return;
     }
 
+    // Rewrite asset paths so CSS/JS load from drafts/ in edit mode
+    const rewrittenHtml = rewriteDraftAssetPaths(newHtml);
+
     // Update iframe content - scripts and styles are handled automatically
-    iframe.srcdoc = newHtml;
+    iframe.srcdoc = rewrittenHtml;
 
     // Update the page title in the editor window
     const parser = new DOMParser();
