@@ -251,10 +251,41 @@ The script automatically discovers all \`form[data-contact]\` elements on the pa
 
 When creating new pages (use the create_page tool, NOT edit_page):
 - Use descriptive paths (e.g., "about.html", "services/consulting.html", "blog/my-first-post.html")
-- Include all necessary HTML structure (DOCTYPE, html, head with title, Bootstrap CSS link, body, Bootstrap JS script)
-- Include theme.css link after bootstrap.min.css in the head
 - Match the styling of existing pages when possible
 - Use Bootstrap components and utilities for all layout and styling
+
+**CRITICAL**: The \`html\` field MUST be a complete, valid HTML document. Always start with \`<!DOCTYPE html>\` and include the full structure shown below. Missing any of these elements will cause the page to be rejected.
+
+Use this exact template as a starting point for every new page:
+
+\`\`\`html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PAGE TITLE HERE</title>
+  <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+  <link rel="stylesheet" href="assets/css/theme.css">
+  <script src="assets/js/bootstrap.bundle.min.js" defer></script>
+</head>
+
+<body>
+  PAGE CONTENT HERE (use Bootstrap components and grid system)
+</body>
+
+</html>
+\`\`\`
+
+Every new page MUST include:
+1. \`<!DOCTYPE html>\` as the very first line
+2. \`<html lang="en">\`
+3. A \`<head>\` with charset, viewport meta tags, and a \`<title>\`
+4. Bootstrap CSS link: \`<link rel="stylesheet" href="assets/css/bootstrap.min.css">\`
+5. Theme CSS link: \`<link rel="stylesheet" href="assets/css/theme.css">\` (after bootstrap)
+6. Bootstrap JS: \`<script src="assets/js/bootstrap.bundle.min.js" defer></script>\`
+7. A \`<body>\` with the actual page content
 
 ## Example
 

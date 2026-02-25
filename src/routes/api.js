@@ -1,9 +1,9 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { Elysia } from 'elysia';
+import path from 'path';
 import sanitizeHtml from 'sanitize-html';
+import { fileURLToPath } from 'url';
 import { logger } from '../lib/logger.js';
-import { safePath, PathTraversalError } from '../lib/safe-path.js';
+import { PathTraversalError, safePath } from '../lib/safe-path.js';
 import { requireAuth, requirePasswordChanged } from '../middleware/auth.js';
 import { verifyCsrfRequest } from '../middleware/csrf.js';
 import { processChat } from '../services/ai/index.js';
@@ -47,7 +47,22 @@ const SANITIZER_OPTIONS = {
 };
 
 /**
+ * Re-add the <!DOCTYPE html> declaration that sanitize-html strips.
+ * Only prepends if the raw HTML originally had one (validated beforehand).
+ *
+ * @param {string} html - Sanitized HTML (doctype already removed by sanitize-html)
+ * @returns {string}
+ */
+function restoreDoctype(html) {
+  if (!html.toLowerCase().includes('<!doctype')) {
+    return `<!DOCTYPE html>\n${html}`;
+  }
+  return html;
+}
+
+/**
  * Validate that HTML output from the AI has essential structure.
+ * Must be called BEFORE sanitize-html (which strips the doctype).
  * 
  * @param {string} html - The HTML to validate
  * @returns {{ valid: boolean, reason?: string }}
@@ -119,9 +134,23 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
 
       const result = await processChat(message, currentHtml, pagePath, conversationId || null);
 
-      // Sanitize AI output to prevent Stored XSS
+      // Validate AI HTML *before* sanitizing (sanitize-html strips <!DOCTYPE>)
       if (result.updatedHtml) {
-        result.updatedHtml = sanitizeHtml(result.updatedHtml, SANITIZER_OPTIONS);
+        const validation = validateHtml(result.updatedHtml);
+        if (!validation.valid) {
+          const label = result.action === 'create' ? 'new page' : 'after edit';
+          log.warn(`AI produced invalid HTML for ${label}`, { reason: validation.reason });
+          set.status = 422;
+          return {
+            error: `AI produced invalid HTML: ${validation.reason}`,
+            conversationId: result.conversationId
+          };
+        }
+
+        // Sanitize, then restore the doctype that sanitize-html strips
+        result.updatedHtml = restoreDoctype(
+          sanitizeHtml(result.updatedHtml, SANITIZER_OPTIONS)
+        );
       }
 
       // Handle different actions
@@ -141,17 +170,6 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
           throw err;
         }
 
-        // Validate new page HTML before saving
-        const validation = validateHtml(result.updatedHtml);
-        if (!validation.valid) {
-          log.warn('AI produced invalid HTML for new page', { reason: validation.reason });
-          set.status = 422;
-          return {
-            error: `AI produced invalid HTML: ${validation.reason}`,
-            conversationId: result.conversationId
-          };
-        }
-
         // Create a new page
         await savePage(result.newPagePath, result.updatedHtml);
 
@@ -164,17 +182,6 @@ export const apiRoutes = new Elysia({ prefix: '/api' })
           conversationId: result.conversationId
         };
       } else if (result.action === 'edit' && result.updatedHtml) {
-        // Validate edited HTML before saving
-        const validation = validateHtml(result.updatedHtml);
-        if (!validation.valid) {
-          log.warn('AI produced invalid HTML after edit', { reason: validation.reason });
-          set.status = 422;
-          return {
-            error: `AI produced invalid HTML: ${validation.reason}`,
-            conversationId: result.conversationId
-          };
-        }
-
         // Edit the current page
         await savePage(pagePath, result.updatedHtml);
 
