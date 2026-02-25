@@ -42,12 +42,14 @@ export const settingsRoutes = new Elysia({ prefix: '/settings' })
         id: 'openai',
         model: process.env.OPENAI_MODEL || 'gpt-4o',
         active: aiProvider === 'openai',
+        modelsUrl: 'https://platform.openai.com/docs/models',
       },
       {
         name: 'Anthropic',
         id: 'anthropic',
         model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514',
         active: aiProvider === 'anthropic',
+        modelsUrl: 'https://docs.anthropic.com/en/docs/about-claude/models',
       },
     ];
 
@@ -104,8 +106,9 @@ export const settingsRoutes = new Elysia({ prefix: '/settings' })
                     <span class="fw-medium">${escapeHtml(p.name)}</span>
                     ${p.active ? '<span class="badge bg-primary ms-2">Active</span>' : ''}
                   </div>
-                  <div>
+                  <div class="d-flex align-items-center gap-2">
                     <span class="text-body-secondary">${escapeHtml(p.model)}</span>
+                    <a href="${escapeHtml(p.modelsUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-link btn-sm">View all models &#8599;</a>
                   </div>
                 </div>
               `).join('')}
