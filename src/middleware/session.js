@@ -170,7 +170,7 @@ function getSessionIdFromCookie(cookie) {
  * Create a session cookie string
  */
 export function createSessionCookie(sessionId) {
-  const insecure = process.env.NODE_ENV === 'development';
+  const insecure = process.env.NODE_ENV !== 'production';
   const parts = [
     `${SESSION_COOKIE_NAME}=${sessionId}`,
     'Path=/',

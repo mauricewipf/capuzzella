@@ -6,9 +6,10 @@ import { getDb } from './db/index.js';
 import { logger } from './lib/logger.js';
 import { PathTraversalError, safePath } from './lib/safe-path.js';
 import { requestLoggerPlugin } from './middleware/request-logger.js';
-import { initSessionTable, sessionPlugin, startSessionCleanup } from './middleware/session.js';
+import { createSessionCookie, initSessionTable, saveSession, sessionPlugin, startSessionCleanup } from './middleware/session.js';
 import { handleDraftPreview, handleEditMode } from './routes/preview.js';
 import { loadManifest, rewriteAssetPaths } from './services/asset-manifest.js';
+import { getCsrfToken } from './middleware/csrf.js';
 
 // Import route plugins
 import { apiRoutes } from './routes/api.js';
@@ -134,25 +135,32 @@ async function serveStaticFile(filepath) {
 /**
  * Serve an HTML file from public/ with asset paths rewritten via the manifest
  */
-async function servePublicHtml(filepath) {
+async function servePublicHtml(filepath, session) {
   const file = Bun.file(filepath);
   if (!(await file.exists())) return null;
 
-  const html = await file.text();
-  const rewritten = rewriteAssetPaths(html);
+  let html = await file.text();
+  html = rewriteAssetPaths(html);
 
-  return new Response(rewritten, {
-    headers: {
-      'Content-Type': 'text/html',
-      'Cache-Control': 'no-cache'
-    }
-  });
+  const headers = {
+    'Content-Type': 'text/html',
+    'Cache-Control': 'no-cache'
+  };
+
+  if (session) {
+    const csrfToken = getCsrfToken(session);
+    html = html.replace('</head>', `<meta name="csrf-token" content="${csrfToken}">\n</head>`);
+    saveSession(session._sessionId, session._getData());
+    headers['Set-Cookie'] = createSessionCookie(session._sessionId);
+  }
+
+  return new Response(html, { headers });
 }
 
 /**
  * Try to serve static files
  */
-async function tryServeStatic(reqPath, request) {
+async function tryServeStatic(reqPath, request, session) {
   try {
     // Serve editor assets from /editor/*
     if (reqPath.startsWith('/editor/')) {
@@ -197,7 +205,7 @@ async function tryServeStatic(reqPath, request) {
     const publicFilePath = safePath(PUBLIC_DIR, relativeStaticPath);
     if (publicFilePath.endsWith('.html')) {
       // HTML from public/ gets asset paths rewritten via the manifest
-      const htmlResponse = await servePublicHtml(publicFilePath);
+      const htmlResponse = await servePublicHtml(publicFilePath, session);
       if (htmlResponse) return htmlResponse;
     } else {
       const brResponse = await serveStaticFileWithBr(publicFilePath, request);
@@ -208,7 +216,7 @@ async function tryServeStatic(reqPath, request) {
     // Try adding .html extension
     if (!staticPath.endsWith('.html')) {
       const htmlPath = safePath(PUBLIC_DIR, relativeStaticPath + '.html');
-      return await servePublicHtml(htmlPath);
+      return await servePublicHtml(htmlPath, session);
     }
   } catch (error) {
     if (error instanceof PathTraversalError) {
@@ -263,7 +271,7 @@ const app = new Elysia()
     if (editResult !== null) return editResult;
 
     // Try static files
-    const staticResponse = await tryServeStatic(reqPath, request);
+    const staticResponse = await tryServeStatic(reqPath, request, session);
     if (staticResponse) return staticResponse;
 
     // 404 Not Found

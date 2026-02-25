@@ -4,7 +4,7 @@
  * Usage: add `data-contact` to any <form> element. The script will:
  *   1. Find every <input>, <textarea>, and <select> with a `name` attribute inside the form.
  *   2. Collect their values into a key/value object.
- *   3. POST the object as JSON to /api/contact.
+ *   3. POST the object as JSON to /api/form.
  *   4. Show a Bootstrap alert above the form with success or error feedback.
  *
  * Include the script once before </body>. It initialises all
@@ -14,16 +14,12 @@
 (function () {
   'use strict';
 
-  async function fetchCsrfToken() {
-    const res = await fetch('/api/csrf-token', { credentials: 'include' });
-    if (!res.ok) {
-      throw new Error('Failed to fetch CSRF token');
+  function getCsrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta && meta.content) {
+      return meta.content;
     }
-    const data = await res.json();
-    if (!data?.csrfToken) {
-      throw new Error('Missing CSRF token');
-    }
-    return data.csrfToken;
+    return null;
   }
 
   function initContactForm(form) {
@@ -73,14 +69,16 @@
       alertEl.className = 'd-none';
 
       try {
-        const csrfToken = await fetchCsrfToken();
+        const csrfToken = getCsrfToken();
+        const headers = { 'Content-Type': 'application/json' };
+        if (csrfToken) {
+          headers['X-CSRF-Token'] = csrfToken;
+        }
+
         const res = await fetch('/api/form', {
           method: 'POST',
           credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': csrfToken
-          },
+          headers: headers,
           body: JSON.stringify(fields),
         });
 
