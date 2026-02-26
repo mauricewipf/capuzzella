@@ -1,26 +1,41 @@
 #!/bin/sh
 # Seed persistent directories on first run.
-# When Railway (or Docker) mounts an empty volume over /app/data, /app/drafts,
-# or /app/public, the image contents are hidden. This script copies the
-# original files from /app/_seed/* into the mounted volumes if they are empty.
+# When Railway (or Docker) mounts an empty volume, the image contents are
+# hidden. This script copies the original files from /app/_seed/* into the
+# mounted volumes if they are empty.
 
 seed_if_empty() {
   dir="$1"
-  seed="/app/_seed$(echo "$dir" | sed 's|/app||')"
+  seed="$2"
 
   if [ ! -d "$seed" ]; then
     return
   fi
 
-  # Directory is considered empty when it has no visible entries
+  mkdir -p "$dir"
+
   if [ -z "$(ls -A "$dir" 2>/dev/null)" ]; then
     echo "Seeding $dir from $seed ..."
     cp -r "$seed"/. "$dir"/
   fi
 }
 
-seed_if_empty /app/data
-seed_if_empty /app/drafts
-seed_if_empty /app/public
+VOLUME="/app/appdata"
+
+if [ -d "$VOLUME" ]; then
+  # Railway: single volume mounted at /app/appdata
+  seed_if_empty "$VOLUME/db"     /app/_seed/db
+  seed_if_empty "$VOLUME/drafts" /app/_seed/drafts
+  seed_if_empty "$VOLUME/public" /app/_seed/public
+
+  ln -sfn "$VOLUME/db"     /app/db
+  ln -sfn "$VOLUME/drafts" /app/drafts
+  ln -sfn "$VOLUME/public" /app/public
+else
+  # Docker Compose: separate bind mounts
+  seed_if_empty /app/db     /app/_seed/db
+  seed_if_empty /app/drafts /app/_seed/drafts
+  seed_if_empty /app/public /app/_seed/public
+fi
 
 exec "$@"
