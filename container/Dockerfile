@@ -15,6 +15,7 @@ COPY scripts/ ./scripts/
 COPY public/ ./public/
 COPY drafts/ ./drafts/
 RUN mkdir -p ./data
+COPY data/asset-manifest.json ./data/asset-manifest.json
 RUN mkdir -p ./_seed \
     && cp -r ./public ./_seed/public \
     && cp -r ./drafts ./_seed/drafts \
