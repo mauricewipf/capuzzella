@@ -15,10 +15,11 @@
   "keywords": [
     "website-builder",
     "ai",
-    "bun"
+    "bun",
+    "bootstrap"
   ],
   "author": "Maurice Wipf",
-  "license": "ISC",
+  "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.33.1",
     "elysia": "^1.4.22",

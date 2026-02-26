@@ -201,4 +201,4 @@ After deploying, attach a persistent volume manually:
 
 ## License
 
-ISC
+Capuzzella is released under the [O'Saasy License](LICENSE.md).
