@@ -141,7 +141,7 @@ capuzzella/
 
 Deploy your own Capuzzella instance with one click:
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template?template=https://github.com/mauricewipf/capuzzella)
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/mauricewipf/capuzzella)
 
 ### Environment Variables
 
