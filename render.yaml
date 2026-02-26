@@ -1,0 +1,23 @@
+services:
+  - type: web
+    runtime: docker
+    name: capuzzella
+    dockerfilePath: ./container/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: AI_PROVIDER
+        value: anthropic
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: SITE_URL
+        sync: false
+      - key: TRUSTED_PROXY
+        value: "true"
+    disk:
+      name: appdata
+      mountPath: /app/appdata
+      sizeGB: 1

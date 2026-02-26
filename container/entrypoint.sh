@@ -23,7 +23,7 @@ seed_if_empty() {
 VOLUME="/app/appdata"
 
 if [ -d "$VOLUME" ]; then
-  # Railway: single volume mounted at /app/appdata
+  # PaaS (Railway/Render): single volume mounted at /app/appdata
   seed_if_empty "$VOLUME/db"     /app/_seed/db
   seed_if_empty "$VOLUME/drafts" /app/_seed/drafts
   seed_if_empty "$VOLUME/public" /app/_seed/public

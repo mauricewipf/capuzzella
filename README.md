@@ -137,15 +137,11 @@ capuzzella/
 | Styling | Bootstrap |
 | Editor UI | Vanilla JS |
 
-## Deploy on Railway
-
-Deploy your own Capuzzella instance with one click:
-
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/mauricewipf/capuzzella)
+## Deploy
 
 ### Environment Variables
 
-Configure these in your Railway project settings:
+Configure these in your platform's settings:
 
 | Variable | Description |
 |----------|-------------|
@@ -153,6 +149,8 @@ Configure these in your Railway project settings:
 | `AI_PROVIDER` | Either `openai` or `anthropic` |
 | `OPENAI_API_KEY` | Your OpenAI API key (if using OpenAI) |
 | `ANTHROPIC_API_KEY` | Your Anthropic API key (if using Anthropic) |
+| `SITE_URL` | Your site URL for sitemap generation (no trailing slash) |
+| `TRUSTED_PROXY` | Set to `true` when behind a reverse proxy |
 
 ### Post-Deployment Setup
 
@@ -160,13 +158,21 @@ On first run, a default admin user is created automatically. Check the deploymen
 - **Username**: `admin`
 - **Password**: Shown in the logs (save it immediately)
 
-### Persistent Storage
+### Deploy on Render
 
-Railway supports persistent volumes. To ensure your database and draft files persist across deployments, attach a volume to your service:
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/mauricewipf/capuzzella)
 
-1. Go to your service in Railway
-2. Click "Add Volume"
-3. Mount it at `/app/data` for the SQLite database
+Render uses the `render.yaml` Blueprint to provision the service with a persistent disk automatically. Set your API keys in the Render dashboard after deploying.
+
+### Deploy on Railway
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/github)
+
+After deploying, attach a persistent volume manually:
+
+1. Open your service in Railway, press `Cmd+K` and search "volume"
+2. Mount it at `/app/appdata`
+3. Add `RAILWAY_RUN_UID=0` in the Variables tab (required for volume permissions)
 
 ## Run with Docker Compose
 
