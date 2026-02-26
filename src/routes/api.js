@@ -17,7 +17,7 @@ const log = logger.child('api');
 
 const SANITIZER_OPTIONS = {
   allowedTags: [
-    "html", "head", "body", "meta", "title", "link", "style",
+    "html", "head", "body", "meta", "title", "link", "style", "script",
     "address", "article", "aside", "footer", "header", "h1", "h2", "h3", "h4",
     "h5", "h6", "hgroup", "main", "nav", "section", "blockquote", "dd", "div",
     "dl", "dt", "figcaption", "figure", "hr", "li", "main", "ol", "p", "pre",
@@ -25,7 +25,11 @@ const SANITIZER_OPTIONS = {
     "em", "i", "kbd", "mark", "q", "rb", "rp", "rt", "rtc", "ruby", "s", "samp",
     "small", "span", "strong", "sub", "sup", "time", "u", "var", "wbr", "caption",
     "col", "colgroup", "table", "tbody", "td", "tfoot", "th", "thead", "tr",
-    "img", "button", "input", "label", "select", "option", "textarea", "form"
+    "img", "button", "input", "label", "select", "option", "textarea", "form",
+    "svg", "path", "circle", "ellipse", "line", "polygon", "polyline", "rect",
+    "g", "defs", "symbol", "use", "text", "tspan", "clipPath", "mask",
+    "linearGradient", "radialGradient", "stop", "pattern", "image",
+    "video", "audio", "source", "picture", "noscript"
   ],
   allowedAttributes: {
     '*': ['class', 'style', 'id', 'data-*', 'role', 'aria-*', 'title', 'lang', 'dir'],
@@ -41,9 +45,51 @@ const SANITIZER_OPTIONS = {
     'link': ['rel', 'href', 'type', 'media', 'crossorigin', 'integrity'],
     'meta': ['name', 'content', 'charset', 'http-equiv', 'property'],
     'html': ['lang'],
-    'body': ['class']
+    'body': ['class'],
+    'script': ['src', 'type', 'defer', 'async', 'crossorigin', 'integrity', 'nomodule'],
+    'svg': ['xmlns', 'viewBox', 'width', 'height', 'fill', 'stroke', 'stroke-width',
+            'stroke-linecap', 'stroke-linejoin', 'preserveAspectRatio', 'xmlns:xlink'],
+    'path': ['d', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin',
+             'fill-rule', 'clip-rule', 'transform', 'opacity'],
+    'circle': ['cx', 'cy', 'r', 'fill', 'stroke', 'stroke-width', 'transform', 'opacity'],
+    'ellipse': ['cx', 'cy', 'rx', 'ry', 'fill', 'stroke', 'stroke-width', 'transform', 'opacity'],
+    'rect': ['x', 'y', 'width', 'height', 'rx', 'ry', 'fill', 'stroke', 'stroke-width', 'transform', 'opacity'],
+    'line': ['x1', 'y1', 'x2', 'y2', 'stroke', 'stroke-width', 'transform', 'opacity'],
+    'polygon': ['points', 'fill', 'stroke', 'stroke-width', 'transform', 'opacity'],
+    'polyline': ['points', 'fill', 'stroke', 'stroke-width', 'transform', 'opacity'],
+    'g': ['fill', 'stroke', 'stroke-width', 'transform', 'opacity', 'clip-path'],
+    'use': ['href', 'xlink:href', 'x', 'y', 'width', 'height', 'transform'],
+    'text': ['x', 'y', 'dx', 'dy', 'text-anchor', 'font-size', 'font-family', 'fill', 'transform'],
+    'tspan': ['x', 'y', 'dx', 'dy', 'text-anchor', 'font-size', 'fill'],
+    'symbol': ['viewBox', 'preserveAspectRatio'],
+    'clipPath': ['id'],
+    'mask': ['id', 'x', 'y', 'width', 'height'],
+    'linearGradient': ['id', 'x1', 'y1', 'x2', 'y2', 'gradientUnits', 'gradientTransform'],
+    'radialGradient': ['id', 'cx', 'cy', 'r', 'fx', 'fy', 'gradientUnits', 'gradientTransform'],
+    'stop': ['offset', 'stop-color', 'stop-opacity'],
+    'defs': [],
+    'pattern': ['id', 'x', 'y', 'width', 'height', 'patternUnits', 'patternTransform'],
+    'image': ['href', 'xlink:href', 'x', 'y', 'width', 'height', 'preserveAspectRatio'],
+    'video': ['src', 'controls', 'autoplay', 'muted', 'loop', 'poster', 'width', 'height', 'preload', 'playsinline'],
+    'audio': ['src', 'controls', 'autoplay', 'muted', 'loop', 'preload'],
+    'source': ['src', 'type', 'media', 'srcset', 'sizes'],
+    'picture': []
   },
-  allowedSchemes: ['http', 'https', 'mailto', 'tel', 'data']
+  allowedSchemes: ['http', 'https', 'mailto', 'tel', 'data'],
+  allowVulnerableTags: true,
+  exclusiveFilter: function (frame) {
+    if (frame.tag !== 'script') return false;
+    const src = frame.attribs?.src;
+    if (!src) return true;
+    if (/^(https?:)?\/\/|^data:/i.test(src)) return true;
+    return false;
+  },
+  parser: {
+    lowerCaseAttributeNames: false,
+    lowerCaseTags: false
+  },
+  selfClosing: ['img', 'br', 'hr', 'input', 'meta', 'link', 'source',
+                'circle', 'ellipse', 'line', 'path', 'polygon', 'polyline', 'rect', 'stop', 'use']
 };
 
 /**
