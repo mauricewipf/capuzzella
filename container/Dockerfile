@@ -9,6 +9,7 @@ RUN bun install --frozen-lockfile --production
 COPY src/ ./src/
 COPY editor/ ./editor/
 COPY scripts/ ./scripts/
+COPY static/ ./static/
 
 # Copy mutable directories that will be mounted as volumes.
 # These go into _seed/ so the entrypoint can populate empty volumes on first run.
