@@ -9,7 +9,7 @@ services:
       - .env
     user: "1000:1000"
     volumes:
-      - ./data:/app/data
+      - ./db:/app/db
       - ./public:/app/public
       - ./drafts:/app/drafts
     restart: unless-stopped

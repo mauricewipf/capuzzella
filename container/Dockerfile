@@ -14,12 +14,12 @@ COPY scripts/ ./scripts/
 # These go into _seed/ so the entrypoint can populate empty volumes on first run.
 COPY public/ ./public/
 COPY drafts/ ./drafts/
-RUN mkdir -p ./data
-COPY data/asset-manifest.json ./data/asset-manifest.json
+RUN mkdir -p ./db
+COPY db/asset-manifest.json ./db/asset-manifest.json
 RUN mkdir -p ./_seed \
     && cp -r ./public ./_seed/public \
     && cp -r ./drafts ./_seed/drafts \
-    && cp -r ./data   ./_seed/data
+    && cp -r ./db     ./_seed/db
 
 # Copy entrypoint script
 COPY container/entrypoint.sh ./entrypoint.sh

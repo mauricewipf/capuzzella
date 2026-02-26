@@ -100,7 +100,7 @@ capuzzella/
 ├── public/                               # Published HTML files (read-only)
 ├── scripts/                              # Utility scripts
 │   └── create-user.js                    # Create admin users
-├── data/                                 # SQLite database storage
+├── db/                                   # SQLite database & asset manifest
 ├── .env                                  # Environment configuration
 └── package.json
 ```
