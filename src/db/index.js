@@ -9,7 +9,7 @@ const SALT_ROUNDS = 10;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DB_PATH = path.join(__dirname, '../../db/capuzzella.db');
+const DB_PATH = path.join(__dirname, '../../data/db/capuzzella.db');
 
 let db = null;
 

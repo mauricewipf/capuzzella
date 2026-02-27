@@ -10,17 +10,13 @@ COPY src/ ./src/
 COPY editor/ ./editor/
 COPY scripts/ ./scripts/
 COPY static/ ./static/
+COPY components/ ./components/
 
-# Copy mutable directories that will be mounted as volumes.
-# These go into _seed/ so the entrypoint can populate empty volumes on first run.
-COPY public/ ./public/
-COPY drafts/ ./drafts/
-RUN mkdir -p ./db
-COPY db/asset-manifest.json ./db/asset-manifest.json
+# Copy mutable data directory (db, drafts, public).
+# A seed copy lets the entrypoint populate an empty volume on first run.
+COPY data/ ./data/
 RUN mkdir -p ./_seed \
-    && cp -r ./public ./_seed/public \
-    && cp -r ./drafts ./_seed/drafts \
-    && cp -r ./db     ./_seed/db
+    && cp -r ./data ./_seed/data
 
 # Copy entrypoint script
 COPY container/entrypoint.sh ./entrypoint.sh

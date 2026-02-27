@@ -13,8 +13,8 @@ const log = logger.child('pages');
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DRAFTS_DIR = path.join(__dirname, '../../drafts');
-const PUBLIC_DIR = path.join(__dirname, '../../public');
+const DRAFTS_DIR = path.join(__dirname, '../../data/drafts');
+const PUBLIC_DIR = path.join(__dirname, '../../data/public');
 
 /**
  * Get the publish status of a page

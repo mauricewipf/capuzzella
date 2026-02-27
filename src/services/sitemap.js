@@ -8,7 +8,7 @@ const log = logger.child('sitemap');
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const PUBLIC_DIR = path.join(__dirname, '../../public');
+const PUBLIC_DIR = path.join(__dirname, '../../data/public');
 const SITEMAP_PATH = path.join(PUBLIC_DIR, 'sitemap.xml');
 
 /**

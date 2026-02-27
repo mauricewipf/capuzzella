@@ -11,7 +11,7 @@ import { deletePage, getPage, listPages, savePage } from '../services/pages.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DRAFTS_DIR = path.join(__dirname, '../../drafts');
+const DRAFTS_DIR = path.join(__dirname, '../../data/drafts');
 
 const log = logger.child('api');
 

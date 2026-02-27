@@ -42,8 +42,8 @@ const BASE_CONTENT_SECURITY_POLICY = [
 ].join('; ');
 
 // Static file directories
-const PUBLIC_DIR = path.join(__dirname, '../public');
-const DRAFTS_DIR = path.join(__dirname, '../drafts');
+const PUBLIC_DIR = path.join(__dirname, '../data/public');
+const DRAFTS_DIR = path.join(__dirname, '../data/drafts');
 const EDITOR_DIR = path.join(__dirname, '../editor');
 const STATIC_DIR = path.join(__dirname, '../static');
 

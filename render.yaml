@@ -29,6 +29,6 @@ services:
       - key: TRUSTED_PROXY
         value: "true"
     disk:
-      name: appdata
-      mountPath: /app/appdata
+      name: data
+      mountPath: /app/data
       sizeGB: 1

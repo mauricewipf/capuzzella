@@ -17,9 +17,9 @@ const log = logger.child('publish');
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DRAFTS_DIR = path.join(__dirname, '../../drafts');
-const PUBLIC_DIR = path.join(__dirname, '../../public');
-const DB_DIR = path.join(__dirname, '../../db');
+const DRAFTS_DIR = path.join(__dirname, '../../data/drafts');
+const PUBLIC_DIR = path.join(__dirname, '../../data/public');
+const DB_DIR = path.join(__dirname, '../../data/db');
 const DRAFTS_ASSETS_DIR = path.join(DRAFTS_DIR, 'assets');
 const PUBLIC_ASSETS_DIR = path.join(PUBLIC_DIR, 'assets');
 const MD_FINGERPRINT_LENGTH = 8;

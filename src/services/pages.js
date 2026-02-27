@@ -6,7 +6,7 @@ import { safePath } from '../lib/safe-path.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DRAFTS_DIR = path.join(__dirname, '../../drafts');
+const DRAFTS_DIR = path.join(__dirname, '../../data/drafts');
 
 /**
  * Ensure the drafts directory exists
