@@ -2,6 +2,11 @@ services:
   - type: web
     runtime: docker
     name: capuzzella
+    repo: https://github.com/mauricewipf/capuzzella
+    numInstances: 1
+    region: frankfurt
+    plan: starter
+    branch: main
     dockerfilePath: ./container/Dockerfile
     healthCheckPath: /health
     envVars:
@@ -14,6 +19,12 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: SITE_URL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: CONTACT_EMAIL
+        sync: false
+      - key: EMAIL_FROM
         sync: false
       - key: TRUSTED_PROXY
         value: "true"
