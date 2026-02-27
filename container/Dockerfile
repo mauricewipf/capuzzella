@@ -1,29 +1,26 @@
-FROM oven/bun:1 AS base
+FROM oven/bun:1-alpine AS base
 WORKDIR /app
 
 # Install dependencies
-COPY package.json bun.lockb ./
+COPY --chown=bun:bun package.json bun.lockb ./
 RUN bun install --frozen-lockfile --production
 
 # Copy application code
-COPY src/ ./src/
-COPY editor/ ./editor/
-COPY scripts/ ./scripts/
-COPY static/ ./static/
-COPY components/ ./components/
+COPY --chown=bun:bun src/ ./src/
+COPY --chown=bun:bun editor/ ./editor/
+COPY --chown=bun:bun scripts/ ./scripts/
+COPY --chown=bun:bun static/ ./static/
+COPY --chown=bun:bun components/ ./components/
 
 # Copy mutable data directory (db, drafts, public).
 # A seed copy lets the entrypoint populate an empty volume on first run.
-COPY data/ ./data/
+COPY --chown=bun:bun data/ ./data/
 RUN mkdir -p ./_seed \
     && cp -r ./data ./_seed/data
 
 # Copy entrypoint script
-COPY container/entrypoint.sh ./entrypoint.sh
+COPY --chown=bun:bun container/entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
-
-# Set ownership to bun user (UID 1000)
-RUN chown -R bun:bun /app
 
 # Switch to bun user
 USER bun
