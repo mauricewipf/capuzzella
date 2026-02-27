@@ -18,10 +18,14 @@ export function injectEditor(html, pagePath, csrfToken) {
   // - allow-scripts: run page JS in preview
   // - allow-same-origin: keep same-origin APIs/session behavior for existing pages
   // - allow-forms: allow in-preview form submissions
+  // - allow-popups: let target="_blank" links open in a new tab
+  // - allow-top-navigation-by-user-activation: let link clicks navigate the parent frame (user gesture only)
   const iframeSandbox = [
     'allow-scripts',
     'allow-same-origin',
-    'allow-forms'
+    'allow-forms',
+    'allow-popups',
+    'allow-top-navigation-by-user-activation'
   ].join(' ');
 
   // Create a complete editor shell page with iframe
