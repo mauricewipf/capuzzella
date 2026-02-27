@@ -18,6 +18,10 @@ services:
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-opus-4-6
+      - key: OPENAI_MODEL
+        value: gpt-4.1
       - key: SITE_URL
         sync: false
       - key: RESEND_API_KEY
