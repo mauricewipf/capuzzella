@@ -97,6 +97,7 @@ capuzzella/
 │       │   └── theme.css                 # Add CSS here to customize global design/theme
 │       └── js/
 │           └── bootstrap.bundle.min.js
+├── components/                           # Design system HTML templates (used by AI)
 ├── public/                               # Published HTML files (read-only)
 ├── scripts/                              # Utility scripts
 │   └── create-user.js                    # Create admin users
@@ -105,13 +106,18 @@ capuzzella/
 └── package.json
 ```
 
-## Unified Design
+## Design System
 
-Store UI components like Card, Button, Dialog, etc. in this directory. Capuzzella uses it for a unified/ corporate design across all pages.
+Store UI components like Card, Button, Dialog, etc. as individual HTML files in the `components/` directory. Each file contains all variants of a component (e.g. basic card, card with image, card with image and button).
+
+- `/design-system` — Preview all components on one page (Auth required)
+- The AI automatically uses these components as templates when generating HTML
+- Drop a new `.html` file into `components/` and it appears on the design system page and becomes available to the AI
 
 ```
 capuzzella/
 └── components/
+    ├── button.html
     ├── card.html
     └── ...
 ```
@@ -158,11 +164,20 @@ On first run, a default admin user is created automatically. Check the deploymen
 - **Username**: `admin`
 - **Password**: Shown in the logs (save it immediately)
 
-### Deploy on Render
+### Deploy on Render (Recommended)
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/mauricewipf/capuzzella)
 
-Render uses the `render.yaml` Blueprint to provision the service with a persistent disk automatically. Set your API keys in the Render dashboard after deploying.
+- Render uses the `render.yaml` Blueprint to provision the service with a persistent disk automatically. Set your environment variables in the Render dashboard after deploying. 
+- Find the initial password under Monitor > Logs. Change password after first login.
+
+#### Validate render.yaml
+
+```
+brew update
+brew install render
+render blueprints validate render.yaml
+```
 
 ### Deploy on Railway
 

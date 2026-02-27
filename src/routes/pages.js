@@ -96,17 +96,21 @@ export const pagesRoutes = new Elysia({ prefix: '/pages' })
           <script src="/static/js/bootstrap.bundle.min.js"></script>
         </head>
         <body class="bg-body-tertiary">
-          <div class="container py-5" style="max-width: 900px;">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-              <h1 class="h3 mb-0">Pages</h1>
-              <nav class="d-flex gap-3">
-                <a href="/design-system" class="text-secondary text-decoration-none">Design System</a>
-                <a href="/settings" class="text-secondary text-decoration-none">Settings</a>
-                <form method="POST" action="/auth/logout" style="display:inline">
-                  <input type="hidden" name="_csrf" value="${csrfToken}">
-                  <button type="submit" class="btn btn-outline-secondary btn-sm">Sign out</button>
-                </form>
-              </nav>
+          <div class="container">
+            <div class="row py-5">
+              <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h1 class="h3 mb-0">Pages</h1>
+                  <nav class="d-flex gap-3">
+                    <a href="/design-system" class="text-secondary text-decoration-none">Design System</a>
+                    <a href="/settings" class="text-secondary text-decoration-none">Settings</a>
+                    <form method="POST" action="/auth/logout" style="display:inline">
+                      <input type="hidden" name="_csrf" value="${csrfToken}">
+                      <button type="submit" class="btn btn-outline-secondary btn-sm">Sign out</button>
+                    </form>
+                  </nav>
+                </div>
+              </div>
             </div>
 
             <div class="text-end mb-3">

@@ -24,8 +24,30 @@ const CHANGES_SCHEMA = {
   }
 };
 
+const GET_COMPONENTS_DESCRIPTION = 'Load HTML templates from the design system component library. Call this BEFORE edit_page or create_page when you need component markup as reference. Only request the components you actually need.';
+
+const GET_COMPONENTS_NAMES_DESCRIPTION = 'Array of component names to load (e.g. ["card", "button"]). Only include components relevant to the current request.';
+
 export const AI_TOOLS = {
   openai: [
+    {
+      type: 'function',
+      function: {
+        name: 'get_components',
+        description: GET_COMPONENTS_DESCRIPTION,
+        parameters: {
+          type: 'object',
+          properties: {
+            names: {
+              type: 'array',
+              items: { type: 'string' },
+              description: GET_COMPONENTS_NAMES_DESCRIPTION
+            }
+          },
+          required: ['names']
+        }
+      }
+    },
     {
       type: 'function',
       function: {
@@ -89,6 +111,21 @@ export const AI_TOOLS = {
   ],
   anthropic: [
     {
+      name: 'get_components',
+      description: GET_COMPONENTS_DESCRIPTION,
+      input_schema: {
+        type: 'object',
+        properties: {
+          names: {
+            type: 'array',
+            items: { type: 'string' },
+            description: GET_COMPONENTS_NAMES_DESCRIPTION
+          }
+        },
+        required: ['names']
+      }
+    },
+    {
       name: 'edit_page',
       description: 'Edit the current page by applying targeted search-and-replace changes to its HTML',
       input_schema: {
@@ -143,11 +180,83 @@ export const AI_TOOLS = {
 };
 
 /**
- * Build the system prompt for the AI
- * 
+ * Format loaded components into a text block for tool results.
+ *
+ * @param {Array<{ name: string, html: string }>} components
  * @returns {string}
  */
-export function buildSystemPrompt() {
+export function formatComponentResult(components) {
+  if (components.length === 0) {
+    return 'No matching components found. Proceed using standard Bootstrap markup.';
+  }
+  return components
+    .map(c => `### ${c.name}\n${c.html}`)
+    .join('\n\n');
+}
+
+/**
+ * Parse a tool call into a standardized result.
+ *
+ * @param {string} name - Tool / function name
+ * @param {object} args - Tool arguments / input
+ * @returns {{ action: string, assistantMessage: string, changes: Array|null, updatedHtml: string|null, newPagePath: string|null }}
+ */
+export function parseToolCall(name, args) {
+  switch (name) {
+    case 'edit_page':
+      return {
+        action: 'edit',
+        assistantMessage: args.explanation,
+        changes: args.changes,
+        updatedHtml: null,
+        newPagePath: null
+      };
+
+    case 'create_page':
+      return {
+        action: 'create',
+        assistantMessage: args.explanation,
+        changes: null,
+        updatedHtml: args.html,
+        newPagePath: args.path
+      };
+
+    case 'respond':
+    default:
+      return {
+        action: 'respond',
+        assistantMessage: args.message || args.explanation || '',
+        changes: null,
+        updatedHtml: null,
+        newPagePath: null
+      };
+  }
+}
+
+const FALLBACK_RESULT = {
+  action: 'respond',
+  assistantMessage: 'I could not process your request.',
+  changes: null,
+  updatedHtml: null,
+  newPagePath: null
+};
+
+/** Default result when the AI returns no actionable tool call. */
+export function fallbackResult(message) {
+  return { ...FALLBACK_RESULT, assistantMessage: message || FALLBACK_RESULT.assistantMessage };
+}
+
+/**
+ * Build the system prompt for the AI
+ * 
+ * @param {string[]} componentNames - Available component names from the components/ directory
+ * @returns {string}
+ */
+export function buildSystemPrompt(componentNames = []) {
+  const componentList = componentNames.length > 0
+    ? componentNames.map(n => `  - ${n}`).join('\n')
+    : '  (none available)';
+
   return `
 You are Capuzzella, an AI assistant that helps users build and edit their website pages.
 
@@ -164,9 +273,17 @@ You are Capuzzella, an AI assistant that helps users build and edit their websit
 
 You MUST use one of these tools to respond:
 
-1. **edit_page**: Use this to modify the current page by providing an array of search-and-replace changes. Each change has a \`search\` string (the exact HTML to find) and a \`replace\` string (the HTML to replace it with). Changes are applied in order.
-2. **create_page**: Use this to create a brand new page at a specified path. Provide the complete HTML document.
-3. **respond**: Use this when no page changes are needed (e.g., answering questions, clarifying requests)
+1. **get_components**: Load HTML templates from the design system. Call this FIRST when you need to add or modify components like cards, buttons, etc. Only request the components you need for the current task.
+2. **edit_page**: Use this to modify the current page by providing an array of search-and-replace changes. Each change has a \`search\` string (the exact HTML to find) and a \`replace\` string (the HTML to replace it with). Changes are applied in order.
+3. **create_page**: Use this to create a brand new page at a specified path. Provide the complete HTML document.
+4. **respond**: Use this when no page changes are needed (e.g., answering questions, clarifying requests)
+
+## Design System Components
+
+A component library is available with HTML templates designed for this project. When adding or editing components on a page, use get_components to load the relevant templates and base your HTML on them. This ensures visual consistency across the site.
+
+Available components:
+${componentList}
 
 ## How edit_page Works
 

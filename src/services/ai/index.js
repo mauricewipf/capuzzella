@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import { logger } from '../../lib/logger.js';
+import { listComponentNames } from '../components.js';
 import { processWithAnthropic } from './anthropic.js';
 import { processWithOpenAI } from './openai.js';
 import { buildSystemPrompt } from './prompts.js';
@@ -163,8 +164,8 @@ export function applyDiffs(html, changes) {
 export async function processChat(message, currentHtml, pagePath, conversationId = null) {
   const provider = process.env.AI_PROVIDER || 'openai';
 
-  // Build the system prompt
-  const systemPrompt = buildSystemPrompt();
+  const componentNames = await listComponentNames();
+  const systemPrompt = buildSystemPrompt(componentNames);
 
   // Get or create conversation
   const conversation = getConversation(conversationId);
