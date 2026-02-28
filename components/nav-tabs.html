@@ -1,0 +1,87 @@
+<section class="mb-5">
+  <h2>Nav &amp; Tabs</h2>
+
+  <h3 class="h6 text-muted mt-4">Base nav</h3>
+  <ul class="nav mb-3">
+    <li class="nav-item">
+      <a class="nav-link active" aria-current="page" href="#">Active</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#">Link</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#">Link</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+    </li>
+  </ul>
+
+  <h3 class="h6 text-muted mt-4">Tabs</h3>
+  <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#homeTab" type="button" role="tab" aria-controls="homeTab" aria-selected="true">Home</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profileTab" type="button" role="tab" aria-controls="profileTab" aria-selected="false">Profile</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contactTab" type="button" role="tab" aria-controls="contactTab" aria-selected="false">Contact</button>
+    </li>
+  </ul>
+  <div class="tab-content mb-3" id="myTabContent">
+    <div class="tab-pane fade show active" id="homeTab" role="tabpanel" aria-labelledby="home-tab">
+      <p>This is the home tab content. It is shown by default.</p>
+    </div>
+    <div class="tab-pane fade" id="profileTab" role="tabpanel" aria-labelledby="profile-tab">
+      <p>This is the profile tab content.</p>
+    </div>
+    <div class="tab-pane fade" id="contactTab" role="tabpanel" aria-labelledby="contact-tab">
+      <p>This is the contact tab content.</p>
+    </div>
+  </div>
+
+  <h3 class="h6 text-muted mt-4">Pills</h3>
+  <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pillsHome" type="button" role="tab" aria-controls="pillsHome" aria-selected="true">Home</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pillsProfile" type="button" role="tab" aria-controls="pillsProfile" aria-selected="false">Profile</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="pills-contact-tab" data-bs-toggle="pill" data-bs-target="#pillsContact" type="button" role="tab" aria-controls="pillsContact" aria-selected="false">Contact</button>
+    </li>
+  </ul>
+  <div class="tab-content mb-3" id="pills-tabContent">
+    <div class="tab-pane fade show active" id="pillsHome" role="tabpanel" aria-labelledby="pills-home-tab">
+      <p>Home pill content. This is the default active pill.</p>
+    </div>
+    <div class="tab-pane fade" id="pillsProfile" role="tabpanel" aria-labelledby="pills-profile-tab">
+      <p>Profile pill content.</p>
+    </div>
+    <div class="tab-pane fade" id="pillsContact" role="tabpanel" aria-labelledby="pills-contact-tab">
+      <p>Contact pill content.</p>
+    </div>
+  </div>
+
+  <h3 class="h6 text-muted mt-4">Vertical pills</h3>
+  <div class="d-flex align-items-start">
+    <div class="nav flex-column nav-pills me-3" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+      <button class="nav-link active" id="v-pills-home-tab" data-bs-toggle="pill" data-bs-target="#vPillsHome" type="button" role="tab" aria-controls="vPillsHome" aria-selected="true">Home</button>
+      <button class="nav-link" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#vPillsProfile" type="button" role="tab" aria-controls="vPillsProfile" aria-selected="false">Profile</button>
+      <button class="nav-link" id="v-pills-messages-tab" data-bs-toggle="pill" data-bs-target="#vPillsMessages" type="button" role="tab" aria-controls="vPillsMessages" aria-selected="false">Messages</button>
+    </div>
+    <div class="tab-content" id="v-pills-tabContent">
+      <div class="tab-pane fade show active" id="vPillsHome" role="tabpanel" aria-labelledby="v-pills-home-tab">
+        <p>Vertical home pill content.</p>
+      </div>
+      <div class="tab-pane fade" id="vPillsProfile" role="tabpanel" aria-labelledby="v-pills-profile-tab">
+        <p>Vertical profile pill content.</p>
+      </div>
+      <div class="tab-pane fade" id="vPillsMessages" role="tabpanel" aria-labelledby="v-pills-messages-tab">
+        <p>Vertical messages pill content.</p>
+      </div>
+    </div>
+  </div>
+</section>
