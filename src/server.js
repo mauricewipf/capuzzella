@@ -35,10 +35,10 @@ const BASE_CONTENT_SECURITY_POLICY = [
   "form-action 'self'",
   "frame-src 'self'",
   "img-src 'self' data: https:", // ACCEPTED RISK: Allow external HTTPS images (e.g. placehold.co in design-system)
-  "font-src 'self' data:",
+  "font-src 'self' data: https://fonts.gstatic.com",
   "connect-src 'self'",
   "script-src 'self' 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline'"
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com"
 ].join('; ');
 
 // Static file directories

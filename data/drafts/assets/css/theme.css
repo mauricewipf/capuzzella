@@ -1,24 +1,446 @@
 /*
- * Theme overrides for Bootstrap CSS variables.
- * Edit the values below to customize your site's look and feel.
- * This file loads after bootstrap.min.css and overrides its defaults.
+ * Custom theme — overrides Bootstrap to create a distinct, modern aesthetic.
+ * Palette: warm ink tones with an accent coral. Soft geometry, generous spacing.
  */
 
+/* ─── Fonts ─────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ─── Design Tokens (Light) ─────────────────────────────────────────── */
 :root,
 [data-bs-theme="light"] {
-  --bs-primary: #0d6efd;
-  --bs-primary-rgb: 13, 110, 253;
-  /* add more overrides as needed */
+  --bs-font-sans-serif: 'Inter', system-ui, -apple-system, sans-serif;
+  --bs-font-monospace: 'JetBrains Mono', ui-monospace, monospace;
+  --bs-body-font-family: var(--bs-font-sans-serif);
+  --bs-body-font-size: 1rem;
+  --bs-body-line-height: 1.7;
+
+  --bs-primary: #e05a33;
+  --bs-primary-rgb: 224, 90, 51;
+  --bs-secondary: #6b6b76;
+  --bs-secondary-rgb: 107, 107, 118;
+  --bs-success: #2a9d6e;
+  --bs-success-rgb: 42, 157, 110;
+  --bs-info: #3a86c4;
+  --bs-info-rgb: 58, 134, 196;
+  --bs-warning: #e6a117;
+  --bs-warning-rgb: 230, 161, 23;
+  --bs-danger: #c9303a;
+  --bs-danger-rgb: 201, 48, 58;
+  --bs-dark: #1a1a2e;
+  --bs-dark-rgb: 26, 26, 46;
+  --bs-light: #f7f5f2;
+  --bs-light-rgb: 247, 245, 242;
+
+  --bs-body-color: #2c2c3a;
+  --bs-body-color-rgb: 44, 44, 58;
+  --bs-body-bg: #fdfcfa;
+  --bs-body-bg-rgb: 253, 252, 250;
+  --bs-secondary-bg: #f0ece6;
+  --bs-tertiary-bg: #e8e3db;
+
+  --bs-border-radius: 0.75rem;
+  --bs-border-radius-sm: 0.5rem;
+  --bs-border-radius-lg: 1rem;
+  --bs-border-radius-xl: 1.25rem;
+  --bs-border-radius-pill: 50rem;
+  --bs-border-color: #e0dbd3;
+  --bs-border-width: 1px;
+
+  --bs-link-color: var(--bs-primary);
+  --bs-link-color-rgb: var(--bs-primary-rgb);
+  --bs-link-hover-color: #c14a28;
+  --bs-link-decoration: none;
+
+  --bs-box-shadow: 0 1px 3px rgba(26,26,46,.06), 0 6px 16px rgba(26,26,46,.04);
+  --bs-box-shadow-sm: 0 1px 2px rgba(26,26,46,.05);
+  --bs-box-shadow-lg: 0 4px 12px rgba(26,26,46,.06), 0 16px 40px rgba(26,26,46,.06);
+
+  --theme-surface: #ffffff;
+  --theme-muted: #8c8c99;
+  --theme-accent-subtle: #fdf0eb;
+  --theme-gradient: linear-gradient(135deg, #1a1a2e 0%, #2d2d4a 50%, #e05a33 100%);
 }
 
+/* ─── Design Tokens (Dark) ──────────────────────────────────────────── */
 [data-bs-theme="dark"] {
-  --bs-primary: #6ea8fe;
-  --bs-primary-rgb: 110, 168, 254;
-  /* add more overrides as needed */
+  --bs-primary: #f08060;
+  --bs-primary-rgb: 240, 128, 96;
+  --bs-body-color: #d5d3d0;
+  --bs-body-bg: #111118;
+  --bs-secondary-bg: #1c1c28;
+  --bs-tertiary-bg: #24243a;
+  --bs-border-color: #2e2e42;
+  --bs-link-hover-color: #ffa080;
+
+  --theme-surface: #18182a;
+  --theme-muted: #7a7a8c;
+  --theme-accent-subtle: rgba(240,128,96,.1);
+  --theme-gradient: linear-gradient(135deg, #111118 0%, #1c1c28 50%, #f08060 100%);
 }
 
-/* Component overrides that don't cascade from CSS variables */
+/* ─── Global Reset Refinements ──────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: rgba(224, 90, 51, .18);
+  color: inherit;
+}
+
+/* ─── Typography ────────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  color: var(--bs-body-color);
+}
+
+.display-1, .display-2, .display-3, .display-4, .display-5, .display-6 {
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+}
+
+.lead {
+  font-weight: 400;
+  font-size: 1.15rem;
+  letter-spacing: 0.005em;
+}
+
+p {
+  max-width: 68ch;
+}
+
+code {
+  font-family: var(--bs-font-monospace);
+  font-size: 0.875em;
+  background: var(--theme-accent-subtle);
+  color: var(--bs-primary);
+  padding: 0.15em 0.45em;
+  border-radius: 0.375rem;
+  border: 1px solid var(--bs-border-color);
+}
+
+/* ─── Buttons ───────────────────────────────────────────────────────── */
+.btn {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border-radius: var(--bs-border-radius-pill);
+  padding: 0.6rem 1.5rem;
+  border: none;
+  transition: all 0.2s cubic-bezier(.4,0,.2,1);
+  box-shadow: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,.12) 0%, transparent 50%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0,0,0,.12);
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
 .btn-primary {
   --bs-btn-bg: var(--bs-primary);
   --bs-btn-border-color: var(--bs-primary);
+  --bs-btn-hover-bg: #c14a28;
+  --bs-btn-hover-border-color: #c14a28;
+  --bs-btn-active-bg: #a93f22;
+  --bs-btn-active-border-color: #a93f22;
+  background: var(--bs-primary);
+  color: #fff;
+}
+
+.btn-light {
+  background: #ffffff;
+  color: var(--bs-dark);
+  border: 1.5px solid rgba(255,255,255,.3);
+}
+
+.btn-light:hover {
+  background: var(--bs-light);
+  color: var(--bs-primary);
+}
+
+.btn-dark {
+  background: var(--bs-dark);
+  color: #fff;
+}
+
+.btn-dark:hover {
+  background: #2d2d4a;
+}
+
+.btn-lg {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+}
+
+/* ─── Cards ─────────────────────────────────────────────────────────── */
+.card {
+  background: var(--theme-surface);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius-lg);
+  box-shadow: var(--bs-box-shadow-sm);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  overflow: hidden;
+}
+
+.card:hover {
+  box-shadow: var(--bs-box-shadow-lg);
+  transform: translateY(-2px);
+}
+
+.card-body {
+  padding: 1.75rem;
+}
+
+.card-title {
+  letter-spacing: -0.02em;
+}
+
+.card-img-top {
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+/* ─── Hero / Primary Sections ───────────────────────────────────────── */
+.bg-primary {
+  background: var(--theme-gradient) !important;
+}
+
+.hero-section {
+  position: relative;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,255,255,.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ─── Section Backgrounds ───────────────────────────────────────────── */
+.bg-body-secondary {
+  background-color: var(--bs-secondary-bg) !important;
+}
+
+.bg-body-tertiary {
+  background-color: var(--bs-tertiary-bg) !important;
+}
+
+/* ─── Feature Circles ───────────────────────────────────────────────── */
+.bg-primary-subtle {
+  background: var(--theme-accent-subtle) !important;
+  border: 1.5px solid rgba(224, 90, 51, .15);
+}
+
+.text-primary {
+  color: var(--bs-primary) !important;
+}
+
+/* ─── Tables ────────────────────────────────────────────────────────── */
+.table {
+  --bs-table-bg: var(--theme-surface);
+  --bs-table-striped-bg: var(--bs-secondary-bg);
+  --bs-table-hover-bg: var(--theme-accent-subtle);
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: var(--bs-border-radius);
+  overflow: hidden;
+  border: 1px solid var(--bs-border-color);
+}
+
+.table th {
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--theme-muted);
+}
+
+.table > :not(caption) > * > * {
+  border-bottom-color: var(--bs-border-color);
+  padding: 1rem 1.25rem;
+}
+
+.table-dark {
+  --bs-table-bg: var(--bs-dark);
+  --bs-table-color: #fff;
+}
+
+.table-dark th {
+  color: rgba(255,255,255,.7);
+}
+
+/* ─── Badges ────────────────────────────────────────────────────────── */
+.badge {
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.4em 0.8em;
+  border-radius: var(--bs-border-radius-pill);
+  border: none;
+}
+
+.text-bg-warning {
+  background: rgba(230, 161, 23, .12) !important;
+  color: #b07d10 !important;
+}
+
+.text-bg-info {
+  background: rgba(58, 134, 196, .12) !important;
+  color: #2a6da0 !important;
+}
+
+.text-bg-success {
+  background: rgba(42, 157, 110, .12) !important;
+  color: #1e7a54 !important;
+}
+
+/* ─── Forms ─────────────────────────────────────────────────────────── */
+.form-control,
+.form-select {
+  border-radius: var(--bs-border-radius);
+  border: 1.5px solid var(--bs-border-color);
+  padding: 0.7rem 1rem;
+  font-size: 0.95rem;
+  background: var(--theme-surface);
+  color: var(--bs-body-color);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 3px rgba(224, 90, 51, .12);
+  outline: none;
+}
+
+.form-control::placeholder {
+  color: var(--theme-muted);
+}
+
+.form-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  color: var(--bs-body-color);
+  margin-bottom: 0.4rem;
+}
+
+/* ─── Shadow Utility Override ───────────────────────────────────────── */
+.shadow {
+  box-shadow: var(--bs-box-shadow) !important;
+}
+
+.shadow-sm {
+  box-shadow: var(--bs-box-shadow-sm) !important;
+}
+
+.shadow-lg {
+  box-shadow: var(--bs-box-shadow-lg) !important;
+}
+
+/* ─── Footer ────────────────────────────────────────────────────────── */
+.bg-dark {
+  background: var(--bs-dark) !important;
+}
+
+footer {
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+
+footer p {
+  font-size: 0.875rem;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Images ────────────────────────────────────────────────────────── */
+.img-fluid {
+  border-radius: var(--bs-border-radius-lg);
+  box-shadow: var(--bs-box-shadow);
+}
+
+/* ─── Scrollbar (Webkit) ────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bs-border-color);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-muted);
+}
+
+/* ─── Smooth Scroll ─────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* ─── Animated Gradient Accent Bar (top of page) ────────────────────── */
+body::before {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--bs-primary), #f0a060, var(--bs-primary));
+  background-size: 200% 100%;
+  animation: shimmer 4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ─── Opacity helpers (Bootstrap text-white overrides) ──────────────── */
+.opacity-75 {
+  opacity: .75 !important;
+}
+
+/* ─── Responsive fine-tuning ────────────────────────────────────────── */
+@media (max-width: 767.98px) {
+  .display-3 { font-size: 2.2rem; }
+  .display-4 { font-size: 1.9rem; }
+  .display-5 { font-size: 1.6rem; }
+
+  .btn-lg {
+    padding: 0.65rem 1.5rem;
+    font-size: 0.95rem;
+  }
 }
