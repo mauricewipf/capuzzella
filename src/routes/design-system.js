@@ -69,9 +69,11 @@ export const designSystemRoutes = new Elysia({ prefix: '/design-system' })
 
           <div class="row">
             <div class="col-3">
-              <nav id="ds-nav" class="nav flex-column sticky-top overflow-auto" style="top: 1.5rem; max-height: calc(100vh - 3rem);">
-                ${sidebarLinks}
-              </nav>
+              <div class="sticky-top" style="top: 1.5rem; max-height: calc(100vh - 3rem); overflow-y: auto;">
+                <nav id="ds-nav" class="nav flex-column">
+                  ${sidebarLinks}
+                </nav>
+              </div>
             </div>
             <div class="col-9">
               ${componentHtml}
@@ -81,9 +83,9 @@ export const designSystemRoutes = new Elysia({ prefix: '/design-system' })
 
         <script>
           document.addEventListener('DOMContentLoaded', () => {
-            bootstrap.ScrollSpy.getOrCreateInstance(document.body, {
+            const spy = bootstrap.ScrollSpy.getOrCreateInstance(document.body, {
               target: '#ds-nav',
-              offset: 80,
+              rootMargin: '-10% 0px -80% 0px',
               smoothScroll: true
             });
 
@@ -94,6 +96,8 @@ export const designSystemRoutes = new Elysia({ prefix: '/design-system' })
                 if (target) {
                   target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   history.replaceState(null, '', link.getAttribute('href'));
+                  document.querySelectorAll('#ds-nav a').forEach(l => l.classList.remove('active'));
+                  link.classList.add('active');
                 }
               });
             });
