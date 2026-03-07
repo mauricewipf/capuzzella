@@ -5,11 +5,11 @@ import { fileURLToPath } from 'url';
 import { getDb } from './db/index.js';
 import { logger } from './lib/logger.js';
 import { PathTraversalError, safePath } from './lib/safe-path.js';
+import { getCsrfToken } from './middleware/csrf.js';
 import { requestLoggerPlugin } from './middleware/request-logger.js';
 import { createSessionCookie, initSessionTable, saveSession, sessionPlugin, startSessionCleanup } from './middleware/session.js';
 import { handleDraftPreview, handleEditMode } from './routes/preview.js';
 import { loadManifest, rewriteAssetPaths } from './services/asset-manifest.js';
-import { getCsrfToken } from './middleware/csrf.js';
 
 // Import route plugins
 import { apiRoutes } from './routes/api.js';
@@ -44,8 +44,8 @@ const BASE_CONTENT_SECURITY_POLICY = [
 // Static file directories
 const PUBLIC_DIR = path.join(__dirname, '../data/public');
 const DRAFTS_DIR = path.join(__dirname, '../data/drafts');
-const EDITOR_DIR = path.join(__dirname, '../editor');
-const STATIC_DIR = path.join(__dirname, '../static');
+const EDITOR_DIR = path.join(__dirname, './editor');
+const STATIC_DIR = path.join(__dirname, './static');
 
 // Initialize database and session table
 getDb();

@@ -7,9 +7,7 @@ RUN bun install --frozen-lockfile --production
 
 # Copy application code
 COPY --chown=bun:bun src/ ./src/
-COPY --chown=bun:bun editor/ ./editor/
 COPY --chown=bun:bun scripts/ ./scripts/
-COPY --chown=bun:bun static/ ./static/
 COPY --chown=bun:bun components/ ./components/
 
 # Copy mutable data directory (db, drafts, public).
