@@ -65,22 +65,30 @@ export const settingsRoutes = new Elysia({ prefix: '/settings' })
         <script src="/static/js/bootstrap.bundle.min.js"></script>
       </head>
         <body class="bg-body-tertiary">
-          <div class="container">
-            <div class="row py-5">
-              <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                  <h1 class="h3 mb-0">Settings</h1>
-                  <nav class="d-flex gap-3">
-                    <a href="/pages" class="text-secondary text-decoration-none">Pages</a>
-                    <a href="/design-system" class="text-secondary text-decoration-none">Design System</a>
-                    <form method="POST" action="/auth/logout" style="display:inline">
-                      <input type="hidden" name="_csrf" value="${csrfToken}">
-                      <button type="submit" class="btn btn-outline-secondary btn-sm">Sign out</button>
-                    </form>
-                  </nav>
-                </div>
+          <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container py-3">
+              <a class="navbar-brand" href="/settings">Settings</a>
+              <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#settingsNavbar"
+                aria-controls="settingsNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+              </button>
+              <div class="collapse navbar-collapse" id="settingsNavbar">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                  <li class="nav-item">
+                    <a class="nav-link" href="/pages">Pages</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="/design-system">Design System</a>
+                  </li>
+                </ul>
+                <form method="POST" action="/auth/logout" class="d-flex">
+                  <input type="hidden" name="_csrf" value="${csrfToken}">
+                  <button type="submit" class="btn btn-outline-secondary btn-sm">Sign out</button>
+                </form>
               </div>
             </div>
+          </nav>
+          <div class="container">
 
           ${message ? `
             <div class="alert alert-success" role="alert">

@@ -50,23 +50,30 @@ export const designSystemRoutes = new Elysia({ prefix: '/design-system' })
         </style>
       </head>
       <body class="bg-body-tertiary" data-bs-spy="scroll" data-bs-target="#ds-nav">
-        <div class="container">
-          <div class="row py-5">
-            <div class="col-12">
-              <div class="d-flex justify-content-between align-items-center">
-                <h1 class="h3 mb-0">Design System</h1>
-                <nav class="d-flex gap-3">
-                  <a href="/pages" class="text-secondary text-decoration-none">Pages</a>
-                  <a href="/settings" class="text-secondary text-decoration-none">Settings</a>
-                  <form method="POST" action="/auth/logout" style="display:inline">
-                    <input type="hidden" name="_csrf" value="${csrfToken}">
-                    <button type="submit" class="btn btn-outline-secondary btn-sm">Sign out</button>
-                  </form>
-                </nav>
+          <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container py-3">
+              <a class="navbar-brand" href="/design-system">Design System</a>
+              <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#designSystemNavbar"
+                aria-controls="designSystemNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+              </button>
+              <div class="collapse navbar-collapse" id="designSystemNavbar">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                  <li class="nav-item">
+                    <a class="nav-link" href="/pages">Pages</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="/settings">Settings</a>
+                  </li>
+                </ul>
+                <form method="POST" action="/auth/logout" class="d-flex">
+                  <input type="hidden" name="_csrf" value="${csrfToken}">
+                  <button type="submit" class="btn btn-outline-secondary btn-sm">Sign out</button>
+                </form>
               </div>
             </div>
-          </div>
-
+          </nav>
+        <div class="container mt-3">
           <div class="row">
             <div class="col-3">
               <div class="sticky-top" style="top: 1.5rem; max-height: calc(100vh - 3rem); overflow-y: auto;">
