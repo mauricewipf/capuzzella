@@ -216,7 +216,13 @@ async function tryServeStatic(reqPath, request, session) {
     // Try adding .html extension
     if (!staticPath.endsWith('.html')) {
       const htmlPath = safePath(PUBLIC_DIR, relativeStaticPath + '.html');
-      return await servePublicHtml(htmlPath, session);
+      const htmlResponse = await servePublicHtml(htmlPath, session);
+      if (htmlResponse) return htmlResponse;
+
+      // Try directory index (e.g. /blog or /blog/ → blog/index.html)
+      const dirIndexRel = relativeStaticPath.replace(/\/$/, '') + '/index.html';
+      const dirIndexPath = safePath(PUBLIC_DIR, dirIndexRel);
+      return await servePublicHtml(dirIndexPath, session);
     }
   } catch (error) {
     if (error instanceof PathTraversalError) {
