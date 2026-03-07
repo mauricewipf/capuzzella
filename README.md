@@ -130,7 +130,7 @@ capuzzella/
 - `/*.html?draft=true` - Draft Version of Page without AI Chat (Auth required)
 - `/settings` - User Settings (Auth required)
 - `/pages` - List of all pages (Auth required)
-- `/design-system` - View all UI components
+- `/design-system` - View all UI components (Auth required)
 
 ## Tech Stack
 
