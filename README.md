@@ -130,6 +130,7 @@ capuzzella/
 - `/*.html?draft=true` - Draft Version of Page without AI Chat (Auth required)
 - `/settings` - User Settings (Auth required)
 - `/pages` - List of all pages (Auth required)
+- `/design-system` - View all UI components
 
 ## Tech Stack
 
@@ -194,6 +195,12 @@ After deploying, attach a persistent volume manually:
 ### Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/) installed on your system
+
+### Update production data from local machine
+
+```
+tar czf - --no-mac-metadata -C ./data drafts public db/asset-manifest.json | ssh srv-d6h03mh5pdvs73da33v0@ssh.frankfurt.render.com "rm -rf /app/data/drafts /app/data/public && tar xzf - -C /app/data"
+```
 
 ### Quick Start
 
